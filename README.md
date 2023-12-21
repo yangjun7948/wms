@@ -19,7 +19,7 @@
 
 ##### 微信小程序体验码
 
-<img src="http://file.xiaoy-ai.com/wechat.png" width="200" height="200">
+<img src="http://file.xiaoy-ai.com/wechat.png" width="210" height="210">
 
 ## 演示图
 
