@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaoyai.warehouse.mapper.WarehouseGoodsTraceRelMapper">
+
+    <resultMap type="WarehouseGoodsTraceRel" id="WarehouseGoodsTraceRelResult">
+        <result property="traceRecordId" column="trace_record_id"/>
+        <result property="traceId" column="trace_id"/>
+        <result property="relId" column="rel_id"/>
+        <result property="recordType" column="record_type"/>
+        <result property="recordTime" column="record_time"/>
+    </resultMap>
+
+    <sql id="selectWarehouseGoodsTraceRelVo">
+        select trace_record_id, trace_id, rel_id, record_type, record_time
+        from warehouse_goods_trace_rel
+    </sql>
+
+    <select id="selectWarehouseGoodsTraceRelList" parameterType="WarehouseGoodsTraceRel"
+            resultType="WarehouseGoodsTraceRelDto">
+        SELECT aa.*,
+               ww.warehouse_name
+        FROM (SELECT a.trace_record_id,
+                     a.trace_id,
+                     a.goods_id,
+                     a.record_time,
+                     a.record_type,
+                     a.rel_id,
+                     CASE a.record_type
+                         WHEN 1 THEN
+                             b.document_number
+                         WHEN 2 THEN
+                             c.document_number
+                         END document_number,
+                     CASE a.record_type
+                         WHEN 1 THEN
+                             b.in_warehouse_type
+                         WHEN 2 THEN
+                             c.out_warehouse_type
+                         END warehouse_type,
+                     CASE a.record_type
+                         WHEN 1 THEN
+                             d.nick_name
+                         WHEN 2 THEN
+                             e.nick_name
+                         END create_by,
+                     CASE a.record_type
+                         WHEN 1 THEN
+                             b.warehouse_id
+                         WHEN 2 THEN
+                             c.warehouse_id
+                         END warehouse_id
+              FROM warehouse_goods_trace_rel a
+                       LEFT JOIN warehouse_in_receipt b ON a.rel_id = b.warehouse_in_receipt_id
+                  AND a.record_type = 1
+                       LEFT JOIN warehouse_out_receipt c ON a.rel_id = c.warehouse_out_receipt_id
+                  AND a.record_type = 2
+                       LEFT JOIN sys_user d ON d.user_name = b.create_by
+                       LEFT JOIN sys_user e ON e.user_name = c.create_by
+              WHERE trace_id = #{traceId}) aa
+                 LEFT JOIN warehouse ww ON aa.warehouse_id = ww.warehouse_id
+        ORDER BY aa.record_time asc
+    </select>
+
+    <select id="selectWarehouseGoodsTraceRelByTraceRecordId" parameterType="Long"
+            resultMap="WarehouseGoodsTraceRelResult">
+        <include refid="selectWarehouseGoodsTraceRelVo"/>
+        where del_flag =0 and trace_record_id = #{traceRecordId}
+    </select>
+
+    <insert id="insertWarehouseGoodsTraceRel" parameterType="WarehouseGoodsTraceRel" useGeneratedKeys="true"
+            keyProperty="traceRecordId">
+        insert into warehouse_goods_trace_rel
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="traceId != null">trace_id,</if>
+            <if test="relId != null">rel_id,</if>
+            <if test="recordType != null">record_type,</if>
+            <if test="recordTime != null">record_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="traceId != null">#{traceId},</if>
+            <if test="relId != null">#{relId},</if>
+            <if test="recordType != null">#{recordType},</if>
+            <if test="recordTime != null">#{recordTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updateWarehouseGoodsTraceRel" parameterType="WarehouseGoodsTraceRel">
+        update warehouse_goods_trace_rel
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="traceId != null">trace_id = #{traceId},</if>
+            <if test="relId != null">rel_id = #{relId},</if>
+            <if test="recordType != null">record_type = #{recordType},</if>
+            <if test="recordTime != null">record_time = #{recordTime},</if>
+        </trim>
+        where trace_record_id = #{traceRecordId}
+    </update>
+
+    <update id="deleteWarehouseGoodsTraceRelByTraceRecordId" parameterType="Long">
+        update warehouse_goods_trace_rel
+        set del_flag = 1
+        where trace_record_id = #{traceRecordId}
+    </update>
+
+    <update id="deleteWarehouseGoodsTraceRelByTraceRecordIds" parameterType="String">
+        update warehouse_goods_trace_rel set del_flag = 1 where trace_record_id in
+        <foreach item="traceRecordId" collection="array" open="(" separator="," close=")">
+            #{traceRecordId}
+        </foreach>
+    </update>
+</mapper>

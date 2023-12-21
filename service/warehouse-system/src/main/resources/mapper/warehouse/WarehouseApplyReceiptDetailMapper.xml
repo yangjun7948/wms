@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaoyai.warehouse.mapper.WarehouseApplyReceiptDetailMapper">
+    
+    <resultMap type="WarehouseApplyReceiptDetail" id="WarehouseApplyReceiptDetailResult">
+        <result property="applyReceiptDetailId"    column="apply_receipt_detail_id"    />
+        <result property="applyReceiptId"    column="apply_receipt_id"    />
+        <result property="goodsId"    column="goods_id"    />
+        <result property="goodsPrice"    column="goods_price"    />
+        <result property="goodsNumber"    column="goods_number"    />
+        <result property="goodsAmount"    column="goods_amount"    />
+        <result property="goodsDeadlineTime"    column="goods_deadline_time"    />
+    </resultMap>
+
+    <sql id="selectWarehouseApplyReceiptDetailVo">
+        select apply_receipt_detail_id, apply_receipt_id, goods_id, goods_price, goods_number, goods_amount, goods_deadline_time from warehouse_apply_receipt_detail
+    </sql>
+
+    <select id="selectWarehouseApplyReceiptDetailList" parameterType="WarehouseApplyReceiptDetail" resultMap="WarehouseApplyReceiptDetailResult">
+        <include refid="selectWarehouseApplyReceiptDetailVo"/>
+        <where>
+            and del_flag = 0
+            <if test="applyReceiptId != null "> and apply_receipt_id = #{applyReceiptId}</if>
+            <if test="goodsId != null "> and goods_id = #{goodsId}</if>
+            <if test="goodsPrice != null "> and goods_price = #{goodsPrice}</if>
+            <if test="goodsNumber != null "> and goods_number = #{goodsNumber}</if>
+            <if test="goodsAmount != null "> and goods_amount = #{goodsAmount}</if>
+            <if test="goodsDeadlineTime != null "> and goods_deadline_time = #{goodsDeadlineTime}</if>
+        </where>
+    </select>
+    <select id="getApplyReceiptGoodsList" parameterType="Long" resultType="WarehouseGoodsDto">
+        SELECT
+            a.`goods_id`,
+            a.`category_id`,
+            a.`category_code`,
+            a.`goods_code`,
+            a.`goods_name`,
+            a.`area`,
+            a.`specification_type`,
+            a.`unit_type`,
+            a.`color_type`,
+            a.`min_stock`,
+            a.`max_stock`,
+            a.`goods_picture`,
+            a.`expiration_date`,
+            a.`expiration_date_type`,
+            a.`warranty_date`,
+            a.`warranty_date_type`,
+            a.`sn_validate`,
+            b.goods_amount,
+            b.goods_number,
+            b.goods_price
+        FROM
+            warehouse_apply_receipt_detail b
+                LEFT JOIN warehouse_goods a ON a.goods_id = b.goods_id
+        where b.apply_receipt_id = #{applyReceiptId}
+    </select>
+
+    <select id="selectWarehouseApplyReceiptDetailByApplyReceiptDetailId" parameterType="Long" resultMap="WarehouseApplyReceiptDetailResult">
+        <include refid="selectWarehouseApplyReceiptDetailVo"/>
+        where del_flag =0 and apply_receipt_detail_id = #{applyReceiptDetailId}
+    </select>
+        
+    <insert id="insertWarehouseApplyReceiptDetail" parameterType="WarehouseApplyReceiptDetail" useGeneratedKeys="true" keyProperty="applyReceiptDetailId">
+        insert into warehouse_apply_receipt_detail
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="applyReceiptId != null">apply_receipt_id,</if>
+            <if test="goodsId != null">goods_id,</if>
+            <if test="goodsPrice != null">goods_price,</if>
+            <if test="goodsNumber != null">goods_number,</if>
+            <if test="goodsAmount != null">goods_amount,</if>
+            <if test="goodsDeadlineTime != null">goods_deadline_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="applyReceiptId != null">#{applyReceiptId},</if>
+            <if test="goodsId != null">#{goodsId},</if>
+            <if test="goodsPrice != null">#{goodsPrice},</if>
+            <if test="goodsNumber != null">#{goodsNumber},</if>
+            <if test="goodsAmount != null">#{goodsAmount},</if>
+            <if test="goodsDeadlineTime != null">#{goodsDeadlineTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateWarehouseApplyReceiptDetail" parameterType="WarehouseApplyReceiptDetail">
+        update warehouse_apply_receipt_detail
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="applyReceiptId != null">apply_receipt_id = #{applyReceiptId},</if>
+            <if test="goodsId != null">goods_id = #{goodsId},</if>
+            <if test="goodsPrice != null">goods_price = #{goodsPrice},</if>
+            <if test="goodsNumber != null">goods_number = #{goodsNumber},</if>
+            <if test="goodsAmount != null">goods_amount = #{goodsAmount},</if>
+            <if test="goodsDeadlineTime != null">goods_deadline_time = #{goodsDeadlineTime},</if>
+        </trim>
+        where apply_receipt_detail_id = #{applyReceiptDetailId}
+    </update>
+
+    <update id="deleteWarehouseApplyReceiptDetailByApplyReceiptDetailId" parameterType="Long">
+        update  warehouse_apply_receipt_detail set del_flag = 1 where apply_receipt_detail_id = #{applyReceiptDetailId}
+    </update>
+
+    <update id="deleteWarehouseApplyReceiptDetailByApplyReceiptDetailIds" parameterType="String">
+        update  warehouse_apply_receipt_detail set del_flag = 1 where apply_receipt_detail_id in
+        <foreach item="applyReceiptDetailId" collection="array" open="(" separator="," close=")">
+            #{applyReceiptDetailId}
+        </foreach>
+    </update>
+</mapper>

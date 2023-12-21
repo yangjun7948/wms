@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaoyai.warehouse.mapper.WarehouseCodeMapper">
+    
+    <resultMap type="WarehouseCode" id="WarehouseCodeResult">
+        <result property="codeType"    column="code_type"    />
+        <result property="codeName"    column="code_name"    />
+        <result property="codeNumber"    column="code_number"    />
+    </resultMap>
+
+
+    <insert id="insertWarehouseCode" parameterType="WarehouseCode">
+        insert into warehouse_code
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="codeType != null">code_type,</if>
+            <if test="codeName != null">code_name,</if>
+            <if test="codeNumber != null">code_number,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="codeType != null">#{codeType},</if>
+            <if test="codeName != null">#{codeName},</if>
+            <if test="codeNumber != null">#{codeNumber},</if>
+         </trim>
+    </insert>
+
+
+</mapper>

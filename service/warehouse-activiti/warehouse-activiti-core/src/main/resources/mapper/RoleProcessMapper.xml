@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaoyai.activiti.core.mapper.RoleProcessMapper">
+
+    <!--根据角色id删除角色流程-->
+    <delete id="deleteRoleProcessByRoleId" parameterType="String">
+        delete from act_role_process where role_id = #{roleId}
+    </delete>
+</mapper>

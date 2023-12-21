@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaoyai.activiti.core.mapper.ActApprovalRecordMapper">
+
+    <resultMap id="actApprovalRecordMap" type="com.xiaoyai.common.activiti.api.model.activiti.ActApprovalRecord">
+        <id property="actApprovalRecordId" column="act_approval_record_id"/>
+        <result property="procInstanceId" column="proc_instance_id"/>
+        <result property="approvalUserId" column="approval_user_id"/>
+        <result property="taskDefinitionKey" column="task_definition_key"/>
+        <result property="taskDefinitionName" column="task_definition_name"/>
+        <result property="taskId" column="task_id"/>
+        <result property="taskComment" column="task_comment"/>
+        <result property="taskCommentFile" column="task_comment_file"/>
+        <result property="receiverId" column="receiver_id"/>
+        <result property="approvalSign" column="approval_sign"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="createId" column="create_id"/>
+        <result property="updateId" column="update_id"/>
+        <result property="delFlag" column="del_flag"/>
+    </resultMap>
+
+</mapper>

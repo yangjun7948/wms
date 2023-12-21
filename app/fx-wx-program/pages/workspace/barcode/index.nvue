@@ -1,0 +1,277 @@
+<template>
+	<view v-if="showCamera" class="camera-box">
+		<view class="container">
+			<camera device-position="back" flash="auto" style="width: 100%; height: 58vh" :mode="mode"
+				@scancode="scancode" @error="error">
+				<cover-image class="close-btn" src="@/static/close.png" :style="{
+					top: statusBarHeight + 'px',
+				}" @click="back" />
+
+				<block>
+					<!-- <cover-image class="image" src="@/static/scan-remark2.png" /> -->
+					<cover-image class="scan-bar" src="@/static/scan-bar.png" />
+				</block>
+			</camera>
+		</view>
+		<!-- 物品列表 -->
+		<view class="center-box shadow" style="top: 58vh;z-index: 99;max-height: 41vh;">
+			<view class="bg-white margin-top-xs u-border-bottom align-start" style="min-height: 76rpx;">
+				<view class="action sub-title flex" style="    flex-direction: row;align-items: center;">
+					<view>
+						<text class="text-xl text-bold text-blue text-shadow">待扫码物品</text>
+					</view>
+					<view style="margin-left: 179%;">
+						<text class="text-grey text-sm text-xl">{{successNum}}/{{goodList.length}}</text>
+					</view>
+				</view>
+			</view>
+			<view class="cu-list menu" style="overflow-y: auto;max-height: 34vh;">
+				<view class="cu-item" v-for="(item,index) in goodList" :key="index"
+					style="padding: 0;flex-direction: row;">
+					<view class="content" style="flex-direction: row;">
+						<text class="cuIcon-qr_code text-green"></text>
+						<text class="text-cut text-lg" style="max-width: 352rpx;">{{item.goodsName}}</text>
+					</view>
+					<view class="action" style="flex-direction: row;">
+						<view class="cu-tag radius bg-blue light" style="max-width: 220rpx;">
+							{{!!item.snCode? item.snCode:""}}
+						</view>
+						<button v-if="item.scanSuccess" @click="init(item)" class="cu-btn round sm shadow bg-green margin-left">已扫码</button>
+						<button v-else	class="cu-btn round sm shadow bg-red margin-left">待扫码</button>
+					</view>
+				</view>
+			</view>
+		</view>
+
+
+	</view>
+</template>
+
+<script>
+	import {
+		getPermission
+	} from '@/utils/util.js';
+	import request from '@/utils/request.js';
+	export default {
+		data() {
+			return {
+				showCamera: false,
+				statusBarHeight: 44,
+				mode: 'scanCode',
+				scanFunctionIsUseable: true,
+				goodList: [],
+				noScanList: [],
+				successNum: 0,
+				fromPage: ''
+			}
+		},
+		onLoad(option) {
+			let params = JSON.parse(option.params)
+			this.fromPage = params.fromPage
+
+		},
+
+		onShow() {
+			let that = this
+			that.successNum=0;
+			var res = JSON.parse(uni.getStorageSync('scanList'))
+			res.forEach(item => {
+				if (item.snValidate) {
+					that.goodList.push(item);
+				} else {
+					that.noScanList.push(item);
+				}
+			})
+			that.goodList.forEach(item=>{
+				that.successNum++;
+			})
+			
+			uni.removeStorageSync('scanList') //销毁缓存数据
+			this.statusBarHeight = uni.getSystemInfoSync().statusBarHeight + 10
+			this.permission()
+		},
+		methods: {
+			permission() {
+				getPermission({
+					permission: 'camera',
+					permissionName: '摄像头',
+					success: () => {
+						this.showCamera = true
+					},
+					cancel: () => {
+						this.back()
+					}
+				})
+			},
+			// 扫码结果
+			scancode(e) {
+				console.log(e);
+				if (this.scanFunctionIsUseable) {
+					this.scanFunctionIsUseable = false;
+					this.playMusic()
+					if (this.fromPage == "in") {
+						this.changeInGoodsList(e.detail.result)
+					} else {
+						this.changeOutGoodsList(e.detail.result)
+					}
+					// 扫码间隔两秒
+					setTimeout(() => {
+						this.scanFunctionIsUseable = true;
+					}, 1500)
+				}
+			},
+			//入库扫码时 改变物品状态
+			changeInGoodsList(code) {
+				let succcessNum = 0;
+				this.goodList.forEach(item => {
+					if (code == item.snCode) {
+						succcessNum++;
+						item.scanSuccess = true;
+					} else if (item.scanSuccess) {
+						succcessNum++;
+					}
+				})
+				this.successNum = succcessNum;
+				if (succcessNum == this.goodList.length) {
+					this.back();
+				}
+			},
+			//出库扫码时 改变物品状态
+			changeOutGoodsList(scanCode) {
+				var that = this;
+				let opts = {
+					url: 'warehouse/app/goods/snCode/' + scanCode,
+					method: 'get'
+				};
+				request.httpTokenRequest(opts).then(res => {
+					if (res.code == 200) {
+						let succcessNum = 0;
+						let data = res.data;
+						let goodsName = data.goodsName;
+						let snCode = data.snCode;
+						let scanCodeUseFlag = false;
+						for (var i = 0; i < that.goodList.length; i++) {
+							if (that.goodList[i].scanSuccess) {
+								succcessNum++;
+								if (that.goodList[i].snCode == snCode) scanCodeUseFlag = true;
+							} else {
+								if (that.goodList[i].goodsName == goodsName && !scanCodeUseFlag) {
+									succcessNum++;
+									that.goodList[i].snCode = snCode
+									that.goodList[i].scanSuccess = true;
+									scanCodeUseFlag = true;
+								}
+							}
+							that.successNum = succcessNum;
+							if (succcessNum == that.goodList.length) {
+								that.back();
+							}
+						}
+					} else {
+						uni.showToast({
+							title: res.msg,
+							icon: 'none'
+						})
+					}
+				});
+			},
+			// 扫码提示音
+			playMusic() {
+				const innerAudioContext = wx.createInnerAudioContext()
+				innerAudioContext.autoplay = true
+				innerAudioContext.src = '/static/scan-video.mp3'
+				innerAudioContext.onPlay(() => {
+					this.redirectTo()
+				})
+				innerAudioContext.onError(() => {
+					this.redirectTo()
+				})
+			},
+
+			back() {
+				let that = this
+				let scanList = []
+				scanList = scanList.concat(that.goodList);
+				scanList = scanList.concat(that.noScanList);
+
+				uni.$emit('scanList', scanList)
+				uni.navigateBack()
+			},
+			init(obj) {
+				obj.snCode = "";
+				obj.scanSuccess = false;
+			}
+		}
+	}
+</script>
+
+<style lang="scss" scoped>
+	.camera-box {
+		width: 100%;
+		height: 100vh;
+
+		.container {
+			width: 100%;
+			height: 58vh;
+			text-align: center;
+			color: white;
+			position: fixed;
+		}
+
+		.close-btn {
+			position: fixed;
+			width: 50rpx;
+			height: 50rpx;
+			left: 30rpx;
+			z-index: 999;
+		}
+
+		.image {
+			width: 100%;
+			height: 58vh;
+			z-index: 1;
+		}
+
+		.scan-bar {
+			position: absolute;
+			left: 50%;
+			top: 23vh;
+			width: 428rpx;
+			height: 12rpx;
+			transform: translateX(-50%);
+			z-index: 1;
+			animation: scan 1.6s linear infinite;
+		}
+
+		@keyframes scan {
+			0% {
+				top: 23vh;
+				opacity: 0;
+			}
+
+			15% {
+				opacity: 1;
+			}
+
+			90% {
+				opacity: 1;
+			}
+
+			100% {
+				top: 55.5vh;
+				opacity: 0;
+			}
+		}
+	}
+
+	.center-box {
+		color: #333333;
+		width: 700rpx;
+		background-color: #FFFFFF;
+		margin: 0 auto;
+		border-radius: 20rpx;
+		padding: 0rpx 30rpx 0rpx;
+		position: relative;
+		margin-top: 20rpx;
+	}
+</style>

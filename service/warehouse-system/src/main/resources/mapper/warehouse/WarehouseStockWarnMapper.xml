@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaoyai.warehouse.mapper.WarehouseStockWarnMapper">
+    
+    <resultMap type="WarehouseStockWarn" id="WarehouseStockWarnResult">
+        <result property="warnId"    column="warn_id"    />
+        <result property="goodsId"    column="goods_id"    />
+        <result property="goodsName"    column="goods_name"    />
+        <result property="stockNumber"    column="stock_number"    />
+        <result property="warehouseName"    column="warehouse_name"    />
+        <result property="warehouseId"    column="warehouse_id"    />
+        <result property="maxStock"    column="max_stock"    />
+        <result property="minStock"    column="min_stock"    />
+        <result property="warnTime"    column="warn_time"    />
+    </resultMap>
+
+    <sql id="selectWarehouseStockWarnVo">
+        select warn_id, goods_id, goods_name, stock_number, warehouse_id, max_stock, min_stock, warn_time,warehouse_name from warehouse_stock_warn
+    </sql>
+
+    <select id="selectWarehouseStockWarnList" parameterType="WarehouseStockWarn" resultMap="WarehouseStockWarnResult">
+        <include refid="selectWarehouseStockWarnVo"/>
+        <where>
+            and 1 = 1
+            <if test="goodsId != null "> and goods_id = #{goodsId}</if>
+            <if test="goodsName != null  and goodsName != ''"> and goods_name like concat('%', #{goodsName}, '%')</if>
+            <if test="stockNumber != null "> and stock_number = #{stockNumber}</if>
+            <if test="warehouseId != null "> and warehouse_id = #{warehouseId}</if>
+            <if test="maxStock != null "> and max_stock = #{maxStock}</if>
+            <if test="minStock != null "> and min_stock = #{minStock}</if>
+            <if test="warnTime != null "> and warn_time = #{warnTime}</if>
+        </where>
+    </select>
+    
+    <select id="selectWarehouseStockWarnByWarnId" parameterType="Long" resultMap="WarehouseStockWarnResult">
+        <include refid="selectWarehouseStockWarnVo"/>
+        where del_flag =0 and warn_id = #{warnId}
+    </select>
+        
+    <insert id="insertWarehouseStockWarn" parameterType="WarehouseStockWarn" useGeneratedKeys="true" keyProperty="warnId">
+        insert into warehouse_stock_warn
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="goodsId != null">goods_id,</if>
+            <if test="goodsName != null">goods_name,</if>
+            <if test="stockNumber != null">stock_number,</if>
+            <if test="warehouseId != null">warehouse_id,</if>
+            <if test="maxStock != null">max_stock,</if>
+            <if test="minStock != null">min_stock,</if>
+            <if test="warnTime != null">warn_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="goodsId != null">#{goodsId},</if>
+            <if test="goodsName != null">#{goodsName},</if>
+            <if test="stockNumber != null">#{stockNumber},</if>
+            <if test="warehouseId != null">#{warehouseId},</if>
+            <if test="maxStock != null">#{maxStock},</if>
+            <if test="minStock != null">#{minStock},</if>
+            <if test="warnTime != null">#{warnTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateWarehouseStockWarn" parameterType="WarehouseStockWarn">
+        update warehouse_stock_warn
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="goodsId != null">goods_id = #{goodsId},</if>
+            <if test="goodsName != null">goods_name = #{goodsName},</if>
+            <if test="stockNumber != null">stock_number = #{stockNumber},</if>
+            <if test="warehouseId != null">warehouse_id = #{warehouseId},</if>
+            <if test="maxStock != null">max_stock = #{maxStock},</if>
+            <if test="minStock != null">min_stock = #{minStock},</if>
+            <if test="warnTime != null">warn_time = #{warnTime},</if>
+        </trim>
+        where warn_id = #{warnId}
+    </update>
+
+    <update id="deleteWarehouseStockWarnByWarnId" parameterType="Long">
+        update  warehouse_stock_warn set del_flag = 1 where warn_id = #{warnId}
+    </update>
+
+    <update id="deleteWarehouseStockWarnByWarnIds" parameterType="String">
+        update  warehouse_stock_warn set del_flag = 1 where warn_id in
+        <foreach item="warnId" collection="array" open="(" separator="," close=")">
+            #{warnId}
+        </foreach>
+    </update>
+    <delete id="deleteAll">
+        truncate table  warehouse_stock_warn;
+    </delete>
+</mapper>

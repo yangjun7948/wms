@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaoyai.warehouse.mapper.WarehouseTransferReceiptMapper">
+
+    <resultMap type="WarehouseTransferReceipt" id="WarehouseTransferReceiptResult">
+        <result property="warehouseTransferReceiptId" column="warehouse_transfer_receipt_id"/>
+        <result property="transferOutWarehouseId" column="transfer_out_warehouse_id"/>
+        <result property="transferInWarehouseId" column="transfer_in_warehouse_id"/>
+        <result property="documentNumber" column="document_number"/>
+        <result property="transferWarehouseTime" column="transfer_warehouse_time"/>
+        <result property="transferType" column="transfer_type"/>
+        <result property="state" column="state"/>
+        <result property="auditTime" column="audit_time"/>
+        <result property="auditId" column="audit_id"/>
+        <result property="auditName" column="audit_name"/>
+        <result property="delFlag" column="del_flag"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+
+    <select id="selectWarehouseTransferReceiptList" parameterType="WarehouseTransferReceipt"
+            resultType="WarehouseTransferReceiptDto">
+        SELECT
+        a.warehouse_transfer_receipt_id,
+        a.transfer_out_warehouse_id,
+        a.transfer_in_warehouse_id,
+        a.document_number,
+        a.transfer_warehouse_time,
+        a.transfer_type,
+        a.state,
+        a.audit_time,
+        a.audit_id,
+        a.audit_name,
+        a.del_flag,
+        a.create_by,
+        a.create_time,
+        a.update_by,
+        a.update_time,
+        a.remark,
+        b.warehouse_name  transfer_out_warehouse_name,
+        c.warehouse_name transfer_in_warehouse_name,
+        d.in_document_number,
+        d.in_id inReceiptId,
+        d.out_id outReceiptId,
+        d.out_document_number
+        FROM
+        warehouse_transfer_receipt a
+        LEFT JOIN warehouse b on a.transfer_out_warehouse_id = b.warehouse_id
+        LEFT JOIN warehouse c on a.transfer_in_warehouse_id = c.warehouse_id
+        LEFT JOIN warehouse_receipt_rel d on d.transfer_id = a.warehouse_transfer_receipt_id
+        where a.del_flag = 0
+        <if test="transferOutWarehouseId != null ">and transfer_out_warehouse_id = #{transferOutWarehouseId}</if>
+        <if test="transferInWarehouseId != null ">and transfer_in_warehouse_id = #{transferInWarehouseId}</if>
+        <if test="documentNumber != null  and documentNumber != ''">and document_number = #{documentNumber}</if>
+        <if test="params.beginTransferWarehouseTime != null and params.beginTransferWarehouseTime != '' and params.endTransferWarehouseTime != null and params.endTransferWarehouseTime != ''">
+          and transfer_warehouse_time between #{params.beginTransferWarehouseTime} and #{params.endTransferWarehouseTime}
+          </if>
+        <if test="transferType != null  and transferType != ''">and transfer_type = #{transferType}</if>
+        <if test="state != null  and state != ''">and state = #{state}</if>
+        <if test="auditTime != null ">and audit_time = #{auditTime}</if>
+        <if test="auditId != null  and auditId != ''">and audit_id = #{auditId}</if>
+        <if test="auditName != null  and auditName != ''">and audit_name like concat('%', #{auditName}, '%')</if>
+        order by a.create_time desc
+    </select>
+
+    <insert id="insertWarehouseTransferReceipt" parameterType="WarehouseTransferReceipt" useGeneratedKeys="true"
+            keyProperty="warehouseTransferReceiptId">
+        insert into warehouse_transfer_receipt
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="transferOutWarehouseId != null">transfer_out_warehouse_id,</if>
+            <if test="transferInWarehouseId != null">transfer_in_warehouse_id,</if>
+            <if test="documentNumber != null">document_number,</if>
+            <if test="transferWarehouseTime != null">transfer_warehouse_time,</if>
+            <if test="transferType != null">transfer_type,</if>
+            <if test="state != null">state,</if>
+            <if test="auditTime != null">audit_time,</if>
+            <if test="auditId != null">audit_id,</if>
+            <if test="auditName != null">audit_name,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="transferOutWarehouseId != null">#{transferOutWarehouseId},</if>
+            <if test="transferInWarehouseId != null">#{transferInWarehouseId},</if>
+            <if test="documentNumber != null">#{documentNumber},</if>
+            <if test="transferWarehouseTime != null">#{transferWarehouseTime},</if>
+            <if test="transferType != null">#{transferType},</if>
+            <if test="state != null">#{state},</if>
+            <if test="auditTime != null">#{auditTime},</if>
+            <if test="auditId != null">#{auditId},</if>
+            <if test="auditName != null">#{auditName},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+        </trim>
+    </insert>
+
+    <update id="updateWarehouseTransferReceipt" parameterType="WarehouseTransferReceipt">
+        update warehouse_transfer_receipt
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="transferOutWarehouseId != null">transfer_out_warehouse_id = #{transferOutWarehouseId},</if>
+            <if test="transferInWarehouseId != null">transfer_in_warehouse_id = #{transferInWarehouseId},</if>
+            <if test="documentNumber != null">document_number = #{documentNumber},</if>
+            <if test="transferWarehouseTime != null">transfer_warehouse_time = #{transferWarehouseTime},</if>
+            <if test="transferType != null">transfer_type = #{transferType},</if>
+            <if test="state != null">state = #{state},</if>
+            <if test="auditTime != null">audit_time = #{auditTime},</if>
+            <if test="auditId != null">audit_id = #{auditId},</if>
+            <if test="auditName != null">audit_name = #{auditName},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where warehouse_transfer_receipt_id = #{warehouseTransferReceiptId}
+    </update>
+
+    <update id="deleteWarehouseTransferReceiptByWarehouseTransferReceiptId" parameterType="Long">
+        update warehouse_transfer_receipt
+        set del_flag = 1
+        where warehouse_transfer_receipt_id = #{warehouseTransferReceiptId}
+    </update>
+
+    <update id="deleteWarehouseTransferReceiptByWarehouseTransferReceiptIds" parameterType="String">
+        update warehouse_transfer_receipt set del_flag = 1 where warehouse_transfer_receipt_id in
+        <foreach item="warehouseTransferReceiptId" collection="array" open="(" separator="," close=")">
+            #{warehouseTransferReceiptId}
+        </foreach>
+    </update>
+</mapper>

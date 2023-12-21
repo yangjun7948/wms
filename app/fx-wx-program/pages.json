@@ -1,0 +1,224 @@
+{
+  "easycom": {
+    "^u-(.*)": "@/uni_modules/uview-ui/components/u-$1/u-$1.vue"
+  },
+  "pages": [
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "首页",
+        "enablePullDownRefresh": true
+      }
+    },
+	{
+	  "path": "pages/login/index",
+	  "style": {
+	    "navigationBarTitleText": "登录页",
+	    "enablePullDownRefresh": false,
+	    "navigationStyle": "custom"
+	  }
+	},
+    {
+      "path": "pages/work/work",
+      "style": {
+        "navigationBarTitleText": "工作台",
+        "enablePullDownRefresh": false,
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/me/me",
+      "style": {
+        "navigationBarTitleText": "我的",
+        "enablePullDownRefresh": false,
+        "navigationStyle": "custom"
+      }
+    },
+	{
+      "path": "pages/me/update-password",
+      "style": {
+        "navigationBarTitleText": "修改密码",
+        "enablePullDownRefresh": false,
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/workspace/outexamine/index",
+      "style": {
+        "navigationBarTitleText": "出库单审核",
+        "enablePullDownRefresh": true,
+		"navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/workspace/outexamine/detail/index",
+      "style": {
+        "navigationBarTitleText": "出库单详情",
+        "enablePullDownRefresh": false,
+		"navigationStyle": "custom"
+      }
+    },
+	{
+	  "path": "pages/workspace/inexamine/index",
+	  "style": {
+	    "navigationBarTitleText": "入库单审核",
+	    "enablePullDownRefresh": true,
+		"navigationStyle": "custom"
+	  }
+	},
+	{
+	  "path": "pages/workspace/inexamine/detail/index",
+	  "style": {
+	    "navigationBarTitleText": "入库单详情",
+	    "enablePullDownRefresh": false,
+		"navigationStyle": "custom"
+	  }
+	},
+    {
+      "path": "pages/workspace/insao/index",
+      "style": {
+        "navigationBarTitleText": "入库扫码",
+        "enablePullDownRefresh": true,
+		"navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/workspace/insao/detail/index",
+      "style": {
+        "navigationBarTitleText": "入库扫码详情",
+        "enablePullDownRefresh": false,
+		"navigationStyle": "custom"
+      }
+    },
+	{
+	  "path": "pages/workspace/outsao/index",
+	  "style": {
+	    "navigationBarTitleText": "出库扫码",
+	    "enablePullDownRefresh": true,
+		"navigationStyle": "custom"
+	  }
+	},
+	{
+	  "path": "pages/workspace/outsao/detail/index",
+	  "style": {
+	    "navigationBarTitleText": "出库扫码详情",
+	    "enablePullDownRefresh": false,
+		"navigationStyle": "custom"
+	  }
+	},
+	{
+	  "path": "pages/workspace/order/index",
+	  "style": {
+	    "navigationBarTitleText": "下单要货",
+	    "enablePullDownRefresh": false,
+		"navigationStyle": "custom"
+	  }
+	},
+	{
+	  "path": "pages/workspace/apply/index",
+	  "style": {
+	    "navigationBarTitleText": "要货申请",
+	    "enablePullDownRefresh": false,
+		"navigationStyle": "custom"
+	  }
+	},
+	{
+	  "path": "pages/workspace/apply/detail/index",
+	  "style": {
+	    "navigationBarTitleText": "要货申请详情",
+	    "enablePullDownRefresh": false,
+		"navigationStyle": "custom"
+	  }
+	},
+	{
+	  "path": "pages/workspace/order/goods/index",
+	  "style": {
+	    "navigationBarTitleText": "物品选择",
+	    "enablePullDownRefresh": false,
+		"navigationStyle": "custom"
+	  }
+	},{
+	  "path": "pages/workspace/stockcheck/index",
+	  "style": {
+	    "navigationBarTitleText": "库存查询",
+	    "enablePullDownRefresh": false,
+		"navigationStyle": "custom"
+	  }
+	},
+	{
+	  "path": "pages/workspace/daiban/index",
+	  "style": {
+	    "navigationBarTitleText": "待办流程",
+	    "enablePullDownRefresh": true,
+		"backgroundColor":"#ffffff",
+		"navigationStyle": "custom"
+	  }
+	},
+	{
+	  "path": "pages/workspace/myrequest/index",
+	  "style": {
+	    "navigationBarTitleText": "我的请求",
+	    "enablePullDownRefresh": true,
+		"backgroundColor":"#ffffff",
+		"navigationStyle": "custom"
+	  }
+	},
+	{
+	  "path": "pages/workspace/yiban/index",
+	  "style": {
+	    "navigationBarTitleText": "已办流程",
+	    "enablePullDownRefresh": true,
+		"backgroundColor":"#ffffff",
+		"navigationStyle": "custom"
+	  }
+	},
+	{
+	  "path": "pages/workspace/flow/XZ01/index",
+	  "style": {
+	    "navigationBarTitleText": "待办流程",
+	    "enablePullDownRefresh": false,
+		"navigationStyle": "custom"
+	  }
+	},
+    {
+      "path": "pages/workspace/barcode/index",
+      "style": {
+        "navigationBarTitleText": "扫码",
+        "enablePullDownRefresh": false,
+		"navigationStyle": "custom"
+      }
+    }
+  ],
+  "tabBar": {
+    "color": "#7A7E83",
+    "selectedColor": "#39b54a",
+    "borderStyle": "black",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "iconPath": "/static/tabbar/home.png",
+        "selectedIconPath": "/static/tabbar/home-ac.png",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/work/work",
+        "iconPath": "/static/tabbar/work.png",
+        "selectedIconPath": "/static/tabbar/work-ac.png",
+        "text": "工作台"
+      },
+      {
+        "pagePath": "pages/me/me",
+        "iconPath": "/static/tabbar/me.png",
+        "selectedIconPath": "/static/tabbar/me-ac.png",
+        "text": "我的"
+      }
+    ]
+  },
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "XX",
+    "navigationBarBackgroundColor": "#fff",
+    "backgroundColor": "#ffffff"
+  }
+}

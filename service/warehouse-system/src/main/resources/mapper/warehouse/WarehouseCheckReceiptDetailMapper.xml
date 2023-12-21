@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaoyai.warehouse.mapper.WarehouseCheckReceiptDetailMapper">
+    
+    <resultMap type="WarehouseCheckReceiptDetail" id="WarehouseCheckReceiptDetailResult">
+        <result property="checkReceiptDetailId"    column="check_receipt_detail_id"    />
+        <result property="checkReceiptId"    column="check_receipt_id"    />
+        <result property="goodsId"    column="goods_id"    />
+        <result property="goodsChangeNumber"    column="goods_change_number"    />
+        <result property="goodsOldNumber"    column="goods_old_number"    />
+        <result property="goodsNewNumber"    column="goods_new_number"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectWarehouseCheckReceiptDetailVo">
+        select check_receipt_detail_id, check_receipt_id, goods_id, goods_change_number, goods_old_number, goods_new_number, remark from warehouse_check_receipt_detail
+    </sql>
+
+    <select id="selectWarehouseCheckReceiptDetailList" parameterType="WarehouseCheckReceiptDetail" resultMap="WarehouseCheckReceiptDetailResult">
+        <include refid="selectWarehouseCheckReceiptDetailVo"/>
+        <where>
+            and del_flag = 0
+            <if test="checkReceiptId != null "> and check_receipt_id = #{checkReceiptId}</if>
+            <if test="goodsId != null "> and goods_id = #{goodsId}</if>
+            <if test="goodsChangeNumber != null "> and goods_change_number = #{goodsChangeNumber}</if>
+            <if test="goodsOldNumber != null "> and goods_old_number = #{goodsOldNumber}</if>
+            <if test="goodsNewNumber != null "> and goods_new_number = #{goodsNewNumber}</if>
+        </where>
+    </select>
+    <select id="getCheckReceiptDetailList" parameterType="WarehouseCheckReceiptDetail" resultType="WarehouseCheckReceiptDetailDto">
+        SELECT
+            a.`check_receipt_detail_id`,
+            a.`check_receipt_id`,
+            a.`goods_id`,
+            a.`goods_new_number`,
+            a.`remark`,
+            b.specification_type,
+            b.goods_name,
+            b.goods_code,
+            b.color_type,
+            b.unit_type,
+            b.goods_picture,
+            IFNULL(sum(d.stock_number),0) goods_old_number
+        FROM
+            warehouse_check_receipt_detail a
+                LEFT JOIN warehouse_goods b ON a.goods_id = b.goods_id
+                LEFT JOIN warehouse_check_receipt c ON a.check_receipt_id = c.check_receipt_id
+                LEFT JOIN warehouse_stock d ON a.goods_id = d.goods_id
+                AND c.warehouse_id = d.warehouse_id
+        WHERE
+            a.check_receipt_id = #{checkReceiptId}
+        GROUP BY
+            a.check_receipt_detail_id,
+            a.check_receipt_id,
+            a.goods_id,
+            a.`remark`,
+            b.goods_name,
+            b.specification_type,
+            b.goods_code,
+            b.color_type,
+            b.unit_type,
+            b.goods_picture
+    </select>
+
+    <select id="selectWarehouseCheckReceiptDetailByCheckReceiptDetailId" parameterType="Long" resultMap="WarehouseCheckReceiptDetailResult">
+        <include refid="selectWarehouseCheckReceiptDetailVo"/>
+        where del_flag =0 and check_receipt_detail_id = #{checkReceiptDetailId}
+    </select>
+        
+    <insert id="insertWarehouseCheckReceiptDetail" parameterType="WarehouseCheckReceiptDetail" useGeneratedKeys="true" keyProperty="checkReceiptDetailId">
+        insert into warehouse_check_receipt_detail
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="checkReceiptId != null">check_receipt_id,</if>
+            <if test="goodsId != null">goods_id,</if>
+            <if test="goodsChangeNumber != null">goods_change_number,</if>
+            <if test="goodsOldNumber != null">goods_old_number,</if>
+            <if test="goodsNewNumber != null">goods_new_number,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="checkReceiptId != null">#{checkReceiptId},</if>
+            <if test="goodsId != null">#{goodsId},</if>
+            <if test="goodsChangeNumber != null">#{goodsChangeNumber},</if>
+            <if test="goodsOldNumber != null">#{goodsOldNumber},</if>
+            <if test="goodsNewNumber != null">#{goodsNewNumber},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateWarehouseCheckReceiptDetail" parameterType="WarehouseCheckReceiptDetail">
+        update warehouse_check_receipt_detail
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="checkReceiptId != null">check_receipt_id = #{checkReceiptId},</if>
+            <if test="goodsId != null">goods_id = #{goodsId},</if>
+            <if test="goodsChangeNumber != null">goods_change_number = #{goodsChangeNumber},</if>
+            <if test="goodsOldNumber != null">goods_old_number = #{goodsOldNumber},</if>
+            <if test="goodsNewNumber != null">goods_new_number = #{goodsNewNumber},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where check_receipt_detail_id = #{checkReceiptDetailId}
+    </update>
+
+    <update id="deleteWarehouseCheckReceiptDetailByCheckReceiptDetailId" parameterType="Long">
+        update  warehouse_check_receipt_detail set del_flag = 1 where check_receipt_detail_id = #{checkReceiptDetailId}
+    </update>
+
+    <update id="deleteWarehouseCheckReceiptDetailByCheckReceiptDetailIds" parameterType="String">
+        update  warehouse_check_receipt_detail set del_flag = 1 where check_receipt_detail_id in
+        <foreach item="checkReceiptDetailId" collection="array" open="(" separator="," close=")">
+            #{checkReceiptDetailId}
+        </foreach>
+    </update>
+</mapper>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaoyai.system.mapper.SysDeptJobTitleMapper">
+    
+    <resultMap type="SysDeptJobTitle" id="SysDeptJobTitleResult">
+        <result property="deptId"    column="dept_id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="jobTitleCode"    column="job_title_code"    />
+    </resultMap>
+
+    <sql id="selectSysDeptJobTitleVo">
+        select dept_id, user_id, job_title_code from sys_dept_job_title
+    </sql>
+
+    <select id="selectSysDeptJobTitleList" parameterType="SysDeptJobTitle" resultMap="SysDeptJobTitleResult">
+        <include refid="selectSysDeptJobTitleVo"/>
+        <where>
+            and del_flag = 0
+            <if test="userId != null "> and user_id = #{userId}</if>
+            <if test="jobTitleCode != null  and jobTitleCode != ''"> and job_title_code = #{jobTitleCode}</if>
+        </where>
+    </select>
+    
+    <select id="selectSysDeptJobTitleByDeptId" parameterType="Long" resultMap="SysDeptJobTitleResult">
+        <include refid="selectSysDeptJobTitleVo"/>
+        where del_flag =0 and dept_id = #{deptId}
+    </select>
+        
+    <insert id="insertSysDeptJobTitle" parameterType="SysDeptJobTitle">
+        insert into sys_dept_job_title
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="deptId != null">dept_id,</if>
+            <if test="userId != null">user_id,</if>
+            <if test="jobTitleCode != null and jobTitleCode != ''">job_title_code,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="deptId != null">#{deptId},</if>
+            <if test="userId != null">#{userId},</if>
+            <if test="jobTitleCode != null and jobTitleCode != ''">#{jobTitleCode},</if>
+         </trim>
+    </insert>
+
+    <update id="updateSysDeptJobTitle" parameterType="SysDeptJobTitle">
+        update sys_dept_job_title
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="jobTitleCode != null and jobTitleCode != ''">job_title_code = #{jobTitleCode},</if>
+        </trim>
+        where dept_id = #{deptId}
+    </update>
+
+    <update id="deleteSysDeptJobTitleByDeptId" parameterType="Long">
+        update  sys_dept_job_title set del_flag = 1 where dept_id = #{deptId}
+    </update>
+
+    <update id="deleteSysDeptJobTitleByDeptIds" parameterType="String">
+        update  sys_dept_job_title set del_flag = 1 where dept_id in
+        <foreach item="deptId" collection="array" open="(" separator="," close=")">
+            #{deptId}
+        </foreach>
+    </update>
+</mapper>

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaoyai.warehouse.mapper.WarehouseStockMapper">
+
+    <resultMap type="WarehouseStock" id="WarehouseStockResult">
+        <result property="stockId" column="stock_id"/>
+        <result property="warehouseId" column="warehouse_id"/>
+        <result property="goodsId" column="goods_id"/>
+        <result property="stockNumber" column="stock_number"/>
+        <result property="goodsPrice" column="goods_price"/>
+        <result property="stockAmount" column="stock_amount"/>
+        <result property="goodsDeadlineTime" column="goods_deadline_time"/>
+    </resultMap>
+
+    <sql id="selectWarehouseStockVo">
+        select stock_id, warehouse_id, goods_id, stock_number, goods_price, stock_amount, goods_deadline_time
+        from warehouse_stock
+    </sql>
+
+    <select id="selectWarehouseStockList" parameterType="WarehouseStock" resultMap="WarehouseStockResult">
+        <include refid="selectWarehouseStockVo"/>
+        <where>
+            and del_flag = 0
+            <if test="warehouseId != null ">and warehouse_id = #{warehouseId}</if>
+            <if test="goodsId != null ">and goods_id = #{goodsId}</if>
+            <if test="stockNumber != null ">and stock_number = #{stockNumber}</if>
+            <if test="goodsPrice != null ">and goods_price = #{goodsPrice}</if>
+            <if test="stockAmount != null ">and stock_amount = #{stockAmount}</if>
+            <if test="goodsDeadlineTime != null ">and goods_deadline_time = #{goodsDeadlineTime}</if>
+        </where>
+    </select>
+
+    <select id="selectWarehouseStockByStockId" parameterType="Long" resultMap="WarehouseStockResult">
+        <include refid="selectWarehouseStockVo"/>
+        where del_flag =0 and stock_id = #{stockId}
+    </select>
+    <select id="selectWarehouseStockSummaryList" parameterType="WarehouseStockReportQueryDto"
+            resultType="WarehouseStock">
+        SELECT
+        f.warehouse_id,
+        f.goods_id,
+        <if test="showPrice != null and showPrice">
+            f.goods_price,
+        </if>
+        <if test="showDeadLineTime != null and showDeadLineTime">
+            f.goods_deadline_time,
+        </if>
+        sum(f.stock_number) stock_number,
+        sum(f.stock_amount) stock_amount
+
+        FROM
+        warehouse_stock f
+        WHERE 1=1
+        <if test="goodsIds != null and goodsIds.size()>0 ">
+            and f.goods_id in
+            <foreach collection="goodsIds" item="name" index="index" open="(" close=")" separator=",">
+                #{name}
+            </foreach>
+        </if>
+        <if test="warehouseIds != null and warehouseIds.size()>0 ">
+            AND f.warehouse_id in
+            <foreach collection="warehouseIds" item="name" index="index" open="(" close=")" separator=",">
+                #{name}
+            </foreach>
+        </if>
+        GROUP BY
+        f.warehouse_id,
+        f.goods_id
+        <if test="showPrice != null and showPrice">
+            ,f.goods_price
+        </if>
+        <if test="showDeadLineTime != null and showDeadLineTime">
+            ,f.goods_deadline_time
+        </if>
+    </select>
+
+    <insert id="insertWarehouseStock" parameterType="WarehouseStock" useGeneratedKeys="true" keyProperty="stockId">
+        insert into warehouse_stock
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="warehouseId != null">warehouse_id,</if>
+            <if test="goodsId != null">goods_id,</if>
+            <if test="stockNumber != null">stock_number,</if>
+            <if test="goodsPrice != null">goods_price,</if>
+            <if test="stockAmount != null">stock_amount,</if>
+            <if test="goodsDeadlineTime != null">goods_deadline_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="warehouseId != null">#{warehouseId},</if>
+            <if test="goodsId != null">#{goodsId},</if>
+            <if test="stockNumber != null">#{stockNumber},</if>
+            <if test="goodsPrice != null">#{goodsPrice},</if>
+            <if test="stockAmount != null">#{stockAmount},</if>
+            <if test="goodsDeadlineTime != null">#{goodsDeadlineTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updateWarehouseStock" parameterType="WarehouseStock">
+        update warehouse_stock
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="warehouseId != null">warehouse_id = #{warehouseId},</if>
+            <if test="goodsId != null">goods_id = #{goodsId},</if>
+            <if test="stockNumber != null">stock_number = #{stockNumber},</if>
+            <if test="goodsPrice != null">goods_price = #{goodsPrice},</if>
+            <if test="stockAmount != null">stock_amount = #{stockAmount},</if>
+            <if test="goodsDeadlineTime != null">goods_deadline_time = #{goodsDeadlineTime},</if>
+        </trim>
+        where stock_id = #{stockId}
+    </update>
+
+    <update id="deleteWarehouseStockByStockId" parameterType="Long">
+        update warehouse_stock
+        set del_flag = 1
+        where stock_id = #{stockId}
+    </update>
+
+    <update id="deleteWarehouseStockByStockIds" parameterType="String">
+        update warehouse_stock set del_flag = 1 where stock_id in
+        <foreach item="stockId" collection="array" open="(" separator="," close=")">
+            #{stockId}
+        </foreach>
+    </update>
+</mapper>

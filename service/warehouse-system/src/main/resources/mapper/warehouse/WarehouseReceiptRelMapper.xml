@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaoyai.warehouse.mapper.WarehouseReceiptRelMapper">
+    
+    <resultMap type="WarehouseReceiptRel" id="WarehouseReceiptRelResult">
+        <result property="relId"    column="rel_id"    />
+        <result property="transferId"    column="transfer_id"    />
+        <result property="transferDocumentNumber"    column="transfer_document_number"    />
+        <result property="inId"    column="in_id"    />
+        <result property="inDocumentNumber"    column="in_document_number"    />
+        <result property="outId"    column="out_id"    />
+        <result property="outDocumentNumber"    column="out_document_number"    />
+    </resultMap>
+
+    <sql id="selectWarehouseReceiptRelVo">
+        select rel_id, transfer_id, transfer_document_number, in_id, in_document_number, out_id, out_document_number from warehouse_receipt_rel
+    </sql>
+
+    <select id="selectWarehouseReceiptRelList" parameterType="WarehouseReceiptRel" resultMap="WarehouseReceiptRelResult">
+        <include refid="selectWarehouseReceiptRelVo"/>
+        <where>
+            and del_flag = 0
+            <if test="transferId != null "> and transfer_id = #{transferId}</if>
+            <if test="transferDocumentNumber != null  and transferDocumentNumber != ''"> and transfer_document_number = #{transferDocumentNumber}</if>
+            <if test="inId != null "> and in_id = #{inId}</if>
+            <if test="inDocumentNumber != null  and inDocumentNumber != ''"> and in_document_number = #{inDocumentNumber}</if>
+            <if test="outId != null "> and out_id = #{outId}</if>
+            <if test="outDocumentNumber != null  and outDocumentNumber != ''"> and out_document_number = #{outDocumentNumber}</if>
+        </where>
+    </select>
+    
+    <select id="selectWarehouseReceiptRelByRelId" parameterType="Long" resultMap="WarehouseReceiptRelResult">
+        <include refid="selectWarehouseReceiptRelVo"/>
+        where del_flag =0 and rel_id = #{relId}
+    </select>
+        
+    <insert id="insertWarehouseReceiptRel" parameterType="WarehouseReceiptRel" useGeneratedKeys="true" keyProperty="relId">
+        insert into warehouse_receipt_rel
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="transferId != null">transfer_id,</if>
+            <if test="transferDocumentNumber != null">transfer_document_number,</if>
+            <if test="inId != null">in_id,</if>
+            <if test="inDocumentNumber != null">in_document_number,</if>
+            <if test="outId != null">out_id,</if>
+            <if test="outDocumentNumber != null">out_document_number,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="transferId != null">#{transferId},</if>
+            <if test="transferDocumentNumber != null">#{transferDocumentNumber},</if>
+            <if test="inId != null">#{inId},</if>
+            <if test="inDocumentNumber != null">#{inDocumentNumber},</if>
+            <if test="outId != null">#{outId},</if>
+            <if test="outDocumentNumber != null">#{outDocumentNumber},</if>
+         </trim>
+    </insert>
+
+    <update id="updateWarehouseReceiptRel" parameterType="WarehouseReceiptRel">
+        update warehouse_receipt_rel
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="transferId != null">transfer_id = #{transferId},</if>
+            <if test="transferDocumentNumber != null">transfer_document_number = #{transferDocumentNumber},</if>
+            <if test="inId != null">in_id = #{inId},</if>
+            <if test="inDocumentNumber != null">in_document_number = #{inDocumentNumber},</if>
+            <if test="outId != null">out_id = #{outId},</if>
+            <if test="outDocumentNumber != null">out_document_number = #{outDocumentNumber},</if>
+        </trim>
+        where rel_id = #{relId}
+    </update>
+
+    <update id="deleteWarehouseReceiptRelByRelId" parameterType="Long">
+        update  warehouse_receipt_rel set del_flag = 1 where rel_id = #{relId}
+    </update>
+
+    <update id="deleteWarehouseReceiptRelByRelIds" parameterType="String">
+        update  warehouse_receipt_rel set del_flag = 1 where rel_id in
+        <foreach item="relId" collection="array" open="(" separator="," close=")">
+            #{relId}
+        </foreach>
+    </update>
+</mapper>

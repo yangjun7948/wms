@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaoyai.warehouse.mapper.WarehouseGoodsTraceMapper">
+
+    <resultMap type="WarehouseGoodsTrace" id="WarehouseGoodsTraceResult">
+        <result property="traceId" column="trace_id"/>
+        <result property="goodsId" column="goods_id"/>
+        <result property="snCode" column="sn_code"/>
+        <result property="delFlag" column="del_flag"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+
+    <sql id="selectWarehouseGoodsTraceVo">
+        select trace_id,
+               goods_id,
+               sn_code,
+               del_flag,
+               create_by,
+               create_time,
+               update_by,
+               update_time,
+               remark
+        from warehouse_goods_trace
+    </sql>
+
+    <select id="selectWarehouseGoodsTraceList" parameterType="WarehouseGoodsTrace"
+            resultMap="WarehouseGoodsTraceResult">
+        <include refid="selectWarehouseGoodsTraceVo"/>
+        <where>
+            and del_flag = 0
+            <if test="goodsId != null ">and goods_id = #{goodsId}</if>
+            <if test="snCode != null  and snCode != ''">and sn_code = #{snCode}</if>
+        </where>
+    </select>
+
+    <select id="selectWarehouseGoodsTraceByTraceId" parameterType="Long" resultMap="WarehouseGoodsTraceResult">
+        <include refid="selectWarehouseGoodsTraceVo"/>
+        where del_flag =0 and trace_id = #{traceId}
+    </select>
+
+    <insert id="insertWarehouseGoodsTrace" parameterType="WarehouseGoodsTrace" useGeneratedKeys="true"
+            keyProperty="traceId">
+        insert into warehouse_goods_trace
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="goodsId != null">goods_id,</if>
+            <if test="snCode != null and snCode != ''">sn_code,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="goodsId != null">#{goodsId},</if>
+            <if test="snCode != null and snCode != ''">#{snCode},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+        </trim>
+    </insert>
+
+    <update id="updateWarehouseGoodsTrace" parameterType="WarehouseGoodsTrace">
+        update warehouse_goods_trace
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="goodsId != null">goods_id = #{goodsId},</if>
+            <if test="snCode != null and snCode != ''">sn_code = #{snCode},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where trace_id = #{traceId}
+    </update>
+
+    <update id="deleteWarehouseGoodsTraceByTraceId" parameterType="Long">
+        update warehouse_goods_trace
+        set del_flag = 1
+        where trace_id = #{traceId}
+    </update>
+
+    <update id="deleteWarehouseGoodsTraceByTraceIds" parameterType="String">
+        update warehouse_goods_trace set del_flag = 1 where trace_id in
+        <foreach item="traceId" collection="array" open="(" separator="," close=")">
+            #{traceId}
+        </foreach>
+    </update>
+    <select id="selectWarehouseGoodsTraceDtoList" parameterType="WarehouseGoodsTrace"
+            resultType="WarehouseGoodsTraceDto">
+        SELECT a.`trace_id`,
+               a.`goods_id`,
+               a.`sn_code`,
+               a.`in_receipt_id`,
+               a.`del_flag`,
+               a.`create_by`,
+               a.`create_time`,
+               a.`update_by`,
+               a.`update_time`,
+               a.`remark`,
+               b.goods_name,
+               c.category_name
+        FROM warehouse_goods_trace a
+                 LEFT JOIN warehouse_goods b ON a.goods_id = b.goods_id
+                 left JOIN warehouse_goods_category c on c.category_id = b.category_id
+                 LEFT JOIN warehouse_goods_trace_rel d on d.trace_id = a.trace_id
+        WHERE d.rel_id = #{relId} and d.record_type=#{recordType} AND d.goods_id = #{goodsId}
+
+    </select>
+    <select id="selectGoodsTraceDtoList" parameterType="WarehouseCodeReportQueryDto"
+            resultType="WarehouseGoodsTraceDto">
+        SELECT
+        a.trace_id,
+        a.trace_state,
+        a.sn_code,
+        b.`goods_code`,
+        b.`goods_name`,
+        b.`area`,
+        b.`specification_type`,
+        b.`unit_type`,
+        b.`color_type`,
+        b.`goods_picture`,
+        c.category_name
+        FROM
+        warehouse_goods_trace a
+        LEFT JOIN warehouse_goods b ON a.goods_id = b.goods_id
+        LEFT JOIN warehouse_goods_category c ON b.category_id = c.category_id
+        where 1=1
+        <if test="snCode != null  and snCode != ''">
+            and a.sn_code = #{snCode}
+        </if>
+        <if test="goodsCode != null  and goodsCode != ''">
+            and b.goods_code = #{goodsCode}
+        </if>
+        <if test="goodsName != null  and goodsName != ''">
+            and b.goods_name = #{goodsName}
+        </if>
+        <if test="categoryIds != null  and categoryIds.size()>0">
+            and c.category_id in
+            <foreach item="name" collection="categoryIds" open="(" separator="," close=")">
+                #{name}
+            </foreach>
+        </if>
+        order by a.create_time desc
+    </select>
+</mapper>

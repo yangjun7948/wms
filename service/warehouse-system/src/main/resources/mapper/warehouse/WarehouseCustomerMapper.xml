@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaoyai.warehouse.mapper.WarehouseCustomerMapper">
+    
+    <resultMap type="WarehouseCustomer" id="WarehouseCustomerResult">
+        <result property="customerId"    column="customer_id"    />
+        <result property="customerName"    column="customer_name"    />
+        <result property="phoneNumber"    column="phone_number"    />
+        <result property="customerType"    column="customer_type"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectWarehouseCustomerVo">
+        select customer_id, customer_name, phone_number, customer_type, del_flag, create_by, create_time, update_by, update_time, remark from warehouse_customer
+    </sql>
+
+    <select id="selectWarehouseCustomerList" parameterType="WarehouseCustomer" resultMap="WarehouseCustomerResult">
+        <include refid="selectWarehouseCustomerVo"/>
+        <where>
+            and del_flag = 0
+            <if test="customerName != null  and customerName != ''"> and customer_name like concat('%', #{customerName}, '%')</if>
+            <if test="phoneNumber != null  and phoneNumber != ''"> and phone_number = #{phoneNumber}</if>
+            <if test="customerType != null  and customerType != ''"> and customer_type = #{customerType}</if>
+        </where>
+    </select>
+    
+    <select id="selectWarehouseCustomerByCustomerId" parameterType="Long" resultMap="WarehouseCustomerResult">
+        <include refid="selectWarehouseCustomerVo"/>
+        where del_flag =0 and customer_id = #{customerId}
+    </select>
+        
+    <insert id="insertWarehouseCustomer" parameterType="WarehouseCustomer" useGeneratedKeys="true" keyProperty="customerId">
+        insert into warehouse_customer
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="customerName != null and customerName != ''">customer_name,</if>
+            <if test="phoneNumber != null and phoneNumber != ''">phone_number,</if>
+            <if test="customerType != null and customerType != ''">customer_type,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="customerName != null and customerName != ''">#{customerName},</if>
+            <if test="phoneNumber != null and phoneNumber != ''">#{phoneNumber},</if>
+            <if test="customerType != null and customerType != ''">#{customerType},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateWarehouseCustomer" parameterType="WarehouseCustomer">
+        update warehouse_customer
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="customerName != null and customerName != ''">customer_name = #{customerName},</if>
+            <if test="phoneNumber != null and phoneNumber != ''">phone_number = #{phoneNumber},</if>
+            <if test="customerType != null and customerType != ''">customer_type = #{customerType},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where customer_id = #{customerId}
+    </update>
+
+    <update id="deleteWarehouseCustomerByCustomerId" parameterType="Long">
+        update  warehouse_customer set del_flag = 1 where customer_id = #{customerId}
+    </update>
+
+    <update id="deleteWarehouseCustomerByCustomerIds" parameterType="String">
+        update  warehouse_customer set del_flag = 1 where customer_id in
+        <foreach item="customerId" collection="array" open="(" separator="," close=")">
+            #{customerId}
+        </foreach>
+    </update>
+</mapper>

@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaoyai.warehouse.mapper.WarehouseCheckReceiptMapper">
+    
+    <resultMap type="WarehouseCheckReceipt" id="WarehouseCheckReceiptResult">
+        <result property="checkReceiptId"    column="check_receipt_id"    />
+        <result property="checkUserId"    column="check_user_id"    />
+        <result property="warehouseId"    column="warehouse_id"    />
+        <result property="documentNumber"    column="document_number"    />
+        <result property="checkTime"    column="check_time"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectWarehouseCheckReceiptVo">
+        select check_receipt_id, check_user_id, warehouse_id, document_number, check_time, del_flag, create_by, create_time, update_by, update_time, remark from warehouse_check_receipt
+    </sql>
+
+    <select id="selectWarehouseCheckReceiptList" parameterType="WarehouseCheckReceipt" resultMap="WarehouseCheckReceiptResult">
+        <include refid="selectWarehouseCheckReceiptVo"/>
+        <where>
+            and del_flag = 0
+            <if test="checkUserId != null "> and check_user_id = #{checkUserId}</if>
+            <if test="warehouseId != null "> and warehouse_id = #{warehouseId}</if>
+            <if test="documentNumber != null  and documentNumber != ''"> and document_number = #{documentNumber}</if>
+            <if test="params.beginCheckTime != null and params.beginCheckTime != '' and params.endCheckTime != null and params.endCheckTime != ''">
+             and check_time between #{params.beginCheckTime} and #{params.endCheckTime}
+            </if>
+            <if test="state != null  and state != ''"> and state = #{state}</if>
+        </where>
+    </select>
+    
+    <select id="selectWarehouseCheckReceiptByCheckReceiptId" parameterType="Long" resultMap="WarehouseCheckReceiptResult">
+        <include refid="selectWarehouseCheckReceiptVo"/>
+        where del_flag =0 and check_receipt_id = #{checkReceiptId}
+    </select>
+    <select id="selectWarehouseCheckReceiptDtoList" parameterType="WarehouseCheckReceipt" resultType="WarehouseCheckReceiptDto">
+        SELECT
+            a.`check_receipt_id`,
+            a.`check_user_id`,
+            a.`warehouse_id`,
+            a.`document_number`,
+            a.`state`,
+            a.`check_time`,
+            a.`del_flag`,
+            a.`create_by`,
+            a.`create_time`,
+            a.`update_by`,
+            a.`update_time`,
+            a.`remark`,
+            b.warehouse_name,
+            c.nick_name checkUserName
+        FROM
+            warehouse_check_receipt a
+                LEFT JOIN warehouse b ON a.warehouse_id = b.warehouse_id
+                LEFT JOIN sys_user c ON c.user_id = a.check_user_id
+        where a.del_flag = 0
+        <if test="warehouseId != null "> and a.warehouse_id = #{warehouseId}</if>
+        <if test="documentNumber != null  and documentNumber != ''"> and a.document_number = #{documentNumber}</if>
+        <if test="params.beginCheckTime != null and params.beginCheckTime != '' and params.endCheckTime != null and params.endCheckTime != ''">
+            and a.check_time between #{params.beginCheckTime} and #{params.endCheckTime}
+        </if>
+        <if test="state != null  and state != ''"> and a.state = #{state}</if>
+    </select>
+
+    <insert id="insertWarehouseCheckReceipt" parameterType="WarehouseCheckReceipt">
+        insert into warehouse_check_receipt
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="checkReceiptId != null">check_receipt_id,</if>
+            <if test="checkUserId != null">check_user_id,</if>
+            <if test="warehouseId != null">warehouse_id,</if>
+            <if test="documentNumber != null">document_number,</if>
+            <if test="checkTime != null">check_time,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="checkReceiptId != null">#{checkReceiptId},</if>
+            <if test="checkUserId != null">#{checkUserId},</if>
+            <if test="warehouseId != null">#{warehouseId},</if>
+            <if test="documentNumber != null">#{documentNumber},</if>
+            <if test="checkTime != null">#{checkTime},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateWarehouseCheckReceipt" parameterType="WarehouseCheckReceipt">
+        update warehouse_check_receipt
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="checkUserId != null">check_user_id = #{checkUserId},</if>
+            <if test="warehouseId != null">warehouse_id = #{warehouseId},</if>
+            <if test="documentNumber != null">document_number = #{documentNumber},</if>
+            <if test="checkTime != null">check_time = #{checkTime},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where check_receipt_id = #{checkReceiptId}
+    </update>
+
+    <update id="deleteWarehouseCheckReceiptByCheckReceiptId" parameterType="Long">
+        update  warehouse_check_receipt set del_flag = 1 where check_receipt_id = #{checkReceiptId}
+    </update>
+
+    <update id="deleteWarehouseCheckReceiptByCheckReceiptIds" parameterType="String">
+        update  warehouse_check_receipt set del_flag = 1 where check_receipt_id in
+        <foreach item="checkReceiptId" collection="array" open="(" separator="," close=")">
+            #{checkReceiptId}
+        </foreach>
+    </update>
+</mapper>

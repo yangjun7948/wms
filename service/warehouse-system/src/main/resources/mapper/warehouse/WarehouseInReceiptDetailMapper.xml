@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaoyai.warehouse.mapper.WarehouseInReceiptDetailMapper">
+    
+    <resultMap type="WarehouseInReceiptDetail" id="WarehouseInReceiptDetailResult">
+        <result property="inReceiptDetailId"    column="in_receipt_detail_id"    />
+        <result property="inReceiptId"    column="in_receipt_id"    />
+        <result property="goodsId"    column="goods_id"    />
+        <result property="goodsPrice"    column="goods_price"    />
+        <result property="goodsNumber"    column="goods_number"    />
+        <result property="goodsAmount"    column="goods_amount"    />
+    </resultMap>
+
+    <sql id="selectWarehouseInReceiptDetailVo">
+        select in_receipt_detail_id, in_receipt_id, goods_id, goods_price, goods_number, goods_amount from warehouse_in_receipt_detail
+    </sql>
+
+    <select id="selectWarehouseInReceiptDetailList" parameterType="WarehouseInReceiptDetail" resultMap="WarehouseInReceiptDetailResult">
+        <include refid="selectWarehouseInReceiptDetailVo"/>
+        <where>
+            and del_flag = 0
+            <if test="inReceiptId != null "> and in_receipt_id = #{inReceiptId}</if>
+            <if test="goodsId != null "> and goods_id = #{goodsId}</if>
+            <if test="goodsPrice != null "> and goods_price = #{goodsPrice}</if>
+            <if test="goodsNumber != null "> and goods_number = #{goodsNumber}</if>
+            <if test="goodsAmount != null "> and goods_amount = #{goodsAmount}</if>
+        </where>
+    </select>
+    
+    <select id="selectWarehouseInReceiptDetailByInReceiptDetailId" parameterType="Long" resultMap="WarehouseInReceiptDetailResult">
+        <include refid="selectWarehouseInReceiptDetailVo"/>
+        where del_flag =0 and in_receipt_detail_id = #{inReceiptDetailId}
+    </select>
+        
+    <insert id="insertWarehouseInReceiptDetail" parameterType="WarehouseInReceiptDetail" useGeneratedKeys="true" keyProperty="inReceiptDetailId">
+        insert into warehouse_in_receipt_detail
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="inReceiptId != null">in_receipt_id,</if>
+            <if test="goodsId != null">goods_id,</if>
+            <if test="goodsPrice != null">goods_price,</if>
+            <if test="goodsNumber != null">goods_number,</if>
+            <if test="goodsAmount != null">goods_amount,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="inReceiptId != null">#{inReceiptId},</if>
+            <if test="goodsId != null">#{goodsId},</if>
+            <if test="goodsPrice != null">#{goodsPrice},</if>
+            <if test="goodsNumber != null">#{goodsNumber},</if>
+            <if test="goodsAmount != null">#{goodsAmount},</if>
+         </trim>
+    </insert>
+
+    <update id="updateWarehouseInReceiptDetail" parameterType="WarehouseInReceiptDetail">
+        update warehouse_in_receipt_detail
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="inReceiptId != null">in_receipt_id = #{inReceiptId},</if>
+            <if test="goodsId != null">goods_id = #{goodsId},</if>
+            <if test="goodsPrice != null">goods_price = #{goodsPrice},</if>
+            <if test="goodsNumber != null">goods_number = #{goodsNumber},</if>
+            <if test="goodsAmount != null">goods_amount = #{goodsAmount},</if>
+        </trim>
+        where in_receipt_detail_id = #{inReceiptDetailId}
+    </update>
+
+    <update id="deleteWarehouseInReceiptDetailByInReceiptDetailId" parameterType="Long">
+        update  warehouse_in_receipt_detail set del_flag = 1 where in_receipt_detail_id = #{inReceiptDetailId}
+    </update>
+
+    <update id="deleteWarehouseInReceiptDetailByInReceiptDetailIds" parameterType="String">
+        update  warehouse_in_receipt_detail set del_flag = 1 where in_receipt_detail_id in
+        <foreach item="inReceiptDetailId" collection="array" open="(" separator="," close=")">
+            #{inReceiptDetailId}
+        </foreach>
+    </update>
+
+    <select id="getInReceiptGoodsList" parameterType="Long" resultType="WarehouseGoodsDto">
+        SELECT
+            a.`goods_id`,
+            a.`category_id`,
+            a.`category_code`,
+            a.`goods_code`,
+            a.`goods_name`,
+            a.`area`,
+            a.`specification_type`,
+            a.`unit_type`,
+            a.`color_type`,
+            a.`min_stock`,
+            a.`max_stock`,
+            a.`goods_picture`,
+            a.`expiration_date`,
+            a.`expiration_date_type`,
+            a.`warranty_date`,
+            a.`warranty_date_type`,
+            a.`sn_validate`,
+            b.goods_amount,
+            b.goods_number,
+            b.goods_price,
+            c.category_name
+        FROM
+            warehouse_in_receipt_detail b
+                LEFT JOIN warehouse_goods a ON a.goods_id = b.goods_id
+                LEFT JOIN warehouse_goods_category c on a.category_id=c.category_id
+        where b.in_receipt_id = #{warehouseInReceiptId}
+    </select>
+
+    <select id="getInReceiptGoodsListWithSnCode" parameterType="Long" resultType="WarehouseGoodsVo">
+        SELECT
+            distinct
+            a.`goods_id`,
+            a.`goods_name`,
+            a.`specification_type`,
+            a.`goods_picture`,
+            a.`sn_validate`,
+            e.category_name,
+            e.category_code,
+            d.sn_code
+        FROM
+            warehouse_in_receipt_detail b
+                LEFT JOIN warehouse_goods a ON a.goods_id = b.goods_id
+                LEFT JOIN warehouse_goods_category e ON e.category_id = a.category_id
+                LEFT JOIN warehouse_goods_trace_rel c ON c.goods_id = b.goods_id
+                AND c.rel_id = #{warehouseInReceiptId}
+                AND c.record_type = 1
+                LEFT JOIN warehouse_goods_trace d ON d.trace_id = c.trace_id
+        WHERE
+            b.in_receipt_id = #{warehouseInReceiptId}
+    </select>
+
+</mapper>

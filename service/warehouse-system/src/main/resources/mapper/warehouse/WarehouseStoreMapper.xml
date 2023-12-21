@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaoyai.warehouse.mapper.WarehouseStoreMapper">
+    
+    <resultMap type="WarehouseStore" id="WarehouseStoreResult">
+        <result property="storeId"    column="store_id"    />
+        <result property="storeName"    column="store_name"    />
+        <result property="address"    column="address"    />
+        <result property="contacts"    column="contacts"    />
+        <result property="contactsPhone"    column="contacts_phone"    />
+    </resultMap>
+
+    <sql id="selectWarehouseStoreVo">
+        select store_id, store_name, address, contacts, contacts_phone from warehouse_store
+    </sql>
+
+    <select id="selectWarehouseStoreList" parameterType="WarehouseStore" resultMap="WarehouseStoreResult">
+        <include refid="selectWarehouseStoreVo"/>
+        <where>
+            and del_flag = 0
+            <if test="storeName != null  and storeName != ''"> and store_name like concat('%', #{storeName}, '%')</if>
+            <if test="address != null  and address != ''"> and address like concat('%', #{address}, '%')</if>
+            <if test="contacts != null  and contacts != ''"> and contacts like concat('%', #{contacts}, '%')</if>
+            <if test="contactsPhone != null  and contactsPhone != ''"> and contacts_phone like concat('%', #{contactsPhone}, '%')</if>
+        </where>
+    </select>
+    
+    <select id="selectWarehouseStoreByStoreId" parameterType="Long" resultMap="WarehouseStoreResult">
+        <include refid="selectWarehouseStoreVo"/>
+        where del_flag =0 and store_id = #{storeId}
+    </select>
+        
+    <insert id="insertWarehouseStore" parameterType="WarehouseStore" useGeneratedKeys="true" keyProperty="storeId">
+        insert into warehouse_store
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="storeName != null">store_name,</if>
+            <if test="address != null">address,</if>
+            <if test="contacts != null">contacts,</if>
+            <if test="contactsPhone != null">contacts_phone,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="storeName != null">#{storeName},</if>
+            <if test="address != null">#{address},</if>
+            <if test="contacts != null">#{contacts},</if>
+            <if test="contactsPhone != null">#{contactsPhone},</if>
+         </trim>
+    </insert>
+
+    <update id="updateWarehouseStore" parameterType="WarehouseStore">
+        update warehouse_store
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="storeName != null">store_name = #{storeName},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="contacts != null">contacts = #{contacts},</if>
+            <if test="contactsPhone != null">contacts_phone = #{contactsPhone},</if>
+        </trim>
+        where store_id = #{storeId}
+    </update>
+
+    <update id="deleteWarehouseStoreByStoreId" parameterType="Long">
+        update  warehouse_store set del_flag = 1 where store_id = #{storeId}
+    </update>
+
+    <update id="deleteWarehouseStoreByStoreIds" parameterType="String">
+        update  warehouse_store set del_flag = 1 where store_id in
+        <foreach item="storeId" collection="array" open="(" separator="," close=")">
+            #{storeId}
+        </foreach>
+    </update>
+</mapper>

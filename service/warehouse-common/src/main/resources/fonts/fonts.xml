@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<fontFamilies>
+
+    <fontFamily name="simsun">
+        <normal>
+            <ttf>fonts/simsun.ttf</ttf>
+            <svg>fonts/simsun.ttf</svg>
+            <eot>fonts/simsun.ttf</eot>
+            <woff>fonts/simsun.ttf</woff>
+        </normal>
+        <pdfEncoding>Identity-H</pdfEncoding>
+        <pdfEmbedded>true</pdfEmbedded>
+    </fontFamily>
+</fontFamilies>

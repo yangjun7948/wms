@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.19.1.final using JasperReports Library version 6.19.1-867c00bf88cd4d784d404379d6c05e1b419e8a4c  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="GoodsSnCode" pageWidth="170" pageHeight="113" columnWidth="160" leftMargin="5" rightMargin="5" topMargin="5" bottomMargin="5" uuid="6262d8d8-9464-4b92-ae7b-723507fada8a">
+	<property name="com.jaspersoft.studio.unit." value="mm"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="mm"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="mm"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="mm"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="mm"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="mm"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="mm"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="mm"/>
+	<property name="com.jaspersoft.studio.unit.columnSpacing" value="mm"/>
+	<queryString>
+		<![CDATA[]]>
+	</queryString>
+	<field name="imageBuffer" class="java.io.InputStream"/>
+	<field name="snCode" class="java.lang.String"/>
+	<field name="goodsName" class="java.lang.String"/>
+	<field name="categoryName" class="java.lang.String"/>
+	<field name="specificationType" class="java.lang.String"/>
+	<detail>
+		<band height="103" splitType="Stretch">
+			<componentElement>
+				<reportElement stretchType="RelativeToBandHeight" x="10" y="36" width="140" height="48" uuid="853926d6-0b08-48e1-b247-9b80829d1b08"/>
+				<jr:Code128 xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd" moduleWidth="1.0" textPosition="none">
+					<jr:codeExpression><![CDATA[$F{snCode}]]></jr:codeExpression>
+				</jr:Code128>
+			</componentElement>
+			<textField>
+				<reportElement x="10" y="86" width="140" height="16" uuid="049aaae7-cdbe-43b1-bc09-3f368873a54d"/>
+				<textElement textAlignment="Center">
+					<font fontName="simsun" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA["SN:"+$F{snCode}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="10" y="7" width="140" height="28" uuid="8379e076-3494-4ebf-880d-a871f9ae7710"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="simsun" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{goodsName}+";"+$F{categoryName}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

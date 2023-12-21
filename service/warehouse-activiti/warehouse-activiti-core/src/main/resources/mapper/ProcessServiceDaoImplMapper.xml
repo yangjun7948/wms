@@ -1,0 +1,1548 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaoyai.activiti.core.mapper.ProcessServiceDaoImplMapper">
+  <select id="queryProcesses" parameterType="Map" resultType="Map">
+
+        SELECT
+        t.status_cd type,
+        t. NAME procTypeName,
+        c.proc_id procId,
+        c.name procName,
+        c.process_code procCode,
+        c.context context,
+        c.proc_num procNum
+        FROM
+      act_all_proc c
+      LEFT JOIN t_dict t ON t.status_cd = c.type
+        WHERE
+        t.table_name = #{query.tableName}
+        AND t.table_columns = #{query.tableColumns}
+        <if test="query.procId != null and query.procId != ''">
+            AND c.proc_id = #{query.procId}
+        </if>
+        <if test="query.systemType != null and query.systemType != ''">
+            AND c.system_type = #{query.systemType}
+        </if>
+        order by c.name asc
+    </select>
+
+    <insert id="addTaskDesc" parameterType="Map">
+        insert into act_task_description
+        (task_desc_id, task_description,task_description_supplement, task_apply_user_id,task_apply_user_name, business_id, proc_instance_id,process_code, create_time,status_cd)
+        values
+        (#{query.taskDescId},#{query.taskDescription},#{query.taskDescriptionSupplement},#{query.applyUserId},#{query.originatorUserName},#{query.businessId}, #{query.processInstanceId},#{query.processCode},#{query.createTime},#{query.statusCd})
+
+    </insert>
+    <insert id="addTaskDescForm" parameterType="Map">
+        insert into act_task_description_form (task_desc_id, form_value) values (#{query.taskDescId}, #{query.formValue})
+    </insert>
+
+    <select id="queryTaskDetail" parameterType="Map" resultType="Map">
+        SELECT
+        k.ID_ taskId,
+        n.proc_instance_id processInstanceId,
+        n.task_description taskDescription,
+        n.task_desc_id taskDescId,
+        n.create_time createTime,
+        u.`name` userName,
+        c. NAME procName,
+        c.type procType,
+        c.proc_num procNum,
+        t. NAME procTypeName
+        FROM
+        act_task_description n
+        LEFT JOIN u_employee u ON n.task_apply_user_id = u.employee_id
+        LEFT JOIN act_ru_task k ON n.proc_instance_id = k.PROC_INST_ID_
+        LEFT JOIN act_all_proc c ON n.process_code = c.process_code
+        LEFT JOIN t_dict t ON c.type = t.status_cd
+        where n.status_cd = '0'
+        <if test="taskIds != null">
+            and n.proc_instance_id in
+            <foreach collection="taskIds" item="item" open="(" close=")" separator=",">
+                #{item.processInstanceId}
+            </foreach>
+        </if>
+        <if test="procTypeList != null and procTypeList.size > 0">
+            and n.process_code in
+            <foreach collection="procTypeList" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="keyWord != null and keyWord != ''">
+            and n.task_description like concat('%',#{keyWord},'%')
+        </if>
+        order by n.create_time desc
+        <if test="page != -1 and page != null ">
+            limit #{page}, #{row}
+        </if>
+
+    </select>
+
+    <select id="queryDoneTaskDetail" parameterType="Map" resultType="Map">
+        SELECT DISTINCT
+        atd.proc_instance_id processInstanceId,
+        atd.task_description taskDescription,
+        atd.task_description_supplement taskDescriptionSupplement,
+        atd.task_desc_id taskDescId,
+        u.nick_name userName,
+        c. NAME procName,
+        c.process_code processCode,
+        c.type procType,
+        c.proc_num procNum,
+        t. NAME procTypeName,
+        RES.OWNER_ owner,
+        art.NAME_ nodeName,
+        max(aar.create_time) createTime
+        FROM
+        ACT_HI_TASKINST RES
+        LEFT JOIN act_task_description atd ON RES.PROC_INST_ID_ = atd.proc_instance_id and atd.status_cd = '0'
+        LEFT JOIN sys_user u ON atd.task_apply_user_id = u.user_id
+        LEFT JOIN act_all_proc c ON atd.process_code = c.process_code
+        LEFT JOIN t_dict t ON c.type = t.status_cd
+        LEFT JOIN act_ru_task art on atd.proc_instance_id = art.PROC_INST_ID_ and SUSPENSION_STATE_ = '1'
+        LEFT JOIN act_approval_record aar on aar.proc_instance_id = atd.proc_instance_id and aar.approval_user_id =
+        #{query.userId}
+        WHERE 0=0
+        <if test="query.instanceIds != null and query.instanceIds.size > 0">
+            AND RES.PROC_INST_ID_ in
+            <foreach collection="query.instanceIds" item="item" open="(" close=")" separator=",">
+                #{item.processInstanceId}
+            </foreach>
+        </if>
+        <if test="query.procTypeList != null and query.procTypeList.size > 0">
+            and atd.process_code in
+            <foreach collection="query.procTypeList" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="query.keyWord != null and query.keyWord != ''">
+            and (atd.task_description like concat('%',#{query.keyWord},'%') or atd.task_description_supplement like
+            concat('%',#{query.keyWord},'%'))
+        </if>
+        GROUP BY
+        atd.proc_instance_id,
+        atd.task_description,
+        atd.task_description_supplement,
+        atd.task_desc_id,
+        u.nick_name,
+        c. NAME,
+        c.type,
+        c.process_code,
+        c.proc_num,
+        t. NAME,
+        RES.OWNER_,
+        art.NAME_
+        ORDER BY
+        max(aar.create_time) DESC
+        <if test="query.page != -1 and query.page != null ">
+            limit #{query.page}, #{query.row}
+        </if>
+
+    </select>
+
+    <select id="queryApprovalList" parameterType="Map" resultType="Map">
+        SELECT
+        TYPE_ type,
+        TASK_ID_ taskId,
+        MESSAGE_ aprovalComment
+        FROM
+        ACT_HI_COMMENT
+        WHERE 1=1
+        <if test="commentType != null">
+            AND TYPE_ = #{commentType}
+        </if>
+        <if test="processInstanceId != null">
+            AND PROC_INST_ID_ = #{processInstanceId}
+        </if>
+    </select>
+
+    <select id="querySaveTaskList" parameterType="Map" resultType="Map">
+        SELECT
+        n.task_desc_id taskDescId,
+        n.task_description taskDescription,
+        n.task_apply_user_id taskApplyUserId,
+        n.business_id businessId,
+        n.proc_id procId,
+        n.emergency_level emergencyLevel,
+        n.task_id taskId,
+        n.EXECUTION_ID_ executionId,
+        n.PROC_INST_ID_ procInstId,
+        n.PROC_DEF_ID_ procDefId,
+        n.status_type statusType,
+        n.create_time createTime,
+        u.name userName
+        FROM
+        act_task_description n
+        LEFT JOIN u_user u ON n.task_apply_user_id = u.user_id
+        WHERE n.status_cd = '0'
+        <if test="userId != null">
+            AND task_apply_user_id = #{userId}
+        </if>
+        <if test="statusType != null">
+            AND status_type = #{statusType}
+        </if>
+    </select>
+
+    <select id="searchRefundBaseInfo" parameterType="Map" resultType="Map">
+    SELECT
+        y.apply_type applyType,
+        y.apply_reason refundReason,
+        l.receipt_number receiptNumber,
+        n.emergency_level emergencyLevel,
+        n.file_address fileAddress,
+        n.proc_id procId
+    FROM
+        act_task_description n
+    LEFT JOIN payfee_detail_apply y ON y.detail_apply_id = n.business_id
+    LEFT JOIN pay_fee_detail l ON y.detail_id = l.detail_id
+    WHERE n.task_desc_id = #{taskDescId} and n.status_cd = '0'
+
+    </select>
+
+    <select id="queryRefundCycle" parameterType="Map" resultType="Map">
+    SELECT
+        l.refund_detail_id refundDetailId,
+        l.month_detail_id monthDetailId,
+        m.start_time startTime,
+        m.end_time endTime,
+        m.received_amount receivedAmount,
+        m.receivable_amount receivableAmount
+    FROM
+        act_task_description n
+    LEFT JOIN payfee_refund_apply_detail l ON l.detail_apply_id = n.business_id
+    LEFT JOIN pay_fee_month_detail m ON l.month_detail_id = m.month_detail_id
+    WHERE n.task_desc_id = #{taskDescId} and n.status_cd = '0'
+
+    </select>
+
+    <select id="getUserIdByInstanceId" parameterType="Map" resultType="string">
+        select task_apply_user_id from act_task_description
+        where proc_instance_id = #{query.processInstanceId} and status_cd = '0'
+
+    </select>
+
+    <select id="queryMyDoneProcess" parameterType="Map" resultType="Map">
+        SELECT
+        n.task_desc_id taskDescId,
+        t.TASK_ID_ taskId,
+        t.PROC_INST_ID_ processInstanceId,
+        n.task_description taskDescription,
+        n.create_time createTime,
+        u. NAME userName,
+        t.ACT_NAME_ nodeName
+        FROM
+            act_hi_actinst t
+        LEFT JOIN act_task_description n ON t.PROC_INST_ID_ = n.PROC_INST_ID_ and atd.status_cd = '0'
+        LEFT JOIN u_user u ON n.task_apply_user_id = u.user_id
+        WHERE
+            t.ASSIGNEE_ = #{userId}
+            AND t.END_TIME_ is not null
+
+        ORDER BY n.create_time DESC
+        limit #{pageStart},#{pageSize}
+
+    </select>
+
+    <select id="getMyDoneProcessCount" parameterType="Map" resultType="Map">
+        SELECT DISTINCT
+        RES.PROC_INST_ID_ processInstanceId
+        FROM
+        ACT_HI_TASKINST RES
+        LEFT JOIN act_task_description atd on RES.PROC_INST_ID_=atd.proc_instance_id and atd.status_cd = '0'
+        LEFT JOIN act_approval_record aar on aar.proc_instance_id = atd.proc_instance_id
+        WHERE
+        RES.END_TIME_ IS NOT NULL
+        AND atd.proc_instance_id IS NOT NULL
+        AND atd.task_apply_user_id != #{query.userId}
+        AND aar.approval_user_id = #{query.userId}
+        AND (
+        EXISTS (
+        SELECT
+        LINK.USER_ID_
+        FROM
+        ACT_HI_IDENTITYLINK LINK
+        WHERE
+        USER_ID_ = #{query.userId}
+        AND LINK.TASK_ID_ = RES.ID_
+        )
+        OR RES.ASSIGNEE_ = #{query.userId}
+        OR RES.OWNER_ = #{query.userId}
+        )
+        <if test="query.procTypeList != null and query.procTypeList.size > 0">
+            and atd.process_code in
+            <foreach collection="query.procTypeList" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="query.keyWord != null and query.keyWord != ''">
+            and (atd.task_description like concat('%',#{query.keyWord},'%') or atd.task_description_supplement like
+            concat('%',#{query.keyWord},'%'))
+        </if>
+        GROUP BY
+        RES.PROC_INST_ID_
+
+    </select>
+
+    <select id="queryMyApplyProcess" parameterType="Map" resultType="Map">
+        SELECT
+        n.proc_instance_id processInstanceId,
+        n.task_description taskDescription,
+        n.task_description_supplement taskDescriptionSupplement,
+        n.task_desc_id taskDescId,
+        n.create_time createTime,
+        n.process_code processCode,
+        n.task_apply_user_name userName,
+        c. NAME procName,
+        c. NAME NAME,
+        c.type procType,
+        c.proc_num procNum,
+        t. NAME procTypeName,
+        arv.TEXT_ statusType,
+        artk.ASSIGNEE_ curTaskHandler,
+        artk.ID_ curTaskId,
+        artk.DELEGATION_ delegation,
+        artk.SUSPENSION_STATE_ suspensionState
+        FROM
+        act_task_description n
+        LEFT JOIN act_all_proc c ON n.process_code = c.process_code
+        LEFT JOIN t_dict t ON c.type = t.status_cd
+        LEFT JOIN act_ru_variable arv ON arv.PROC_INST_ID_ = n.proc_instance_id
+        AND arv.NAME_ = 'processStatus'
+        LEFT JOIN act_ru_task artk ON n.proc_instance_id = artk.PROC_INST_ID_
+        AND artk.ASSIGNEE_ = #{query.userId}
+        WHERE
+        <if test="query.instanceIds != null and query.instanceIds.size > 0">
+            n.proc_instance_id in
+            <foreach collection="query.instanceIds" item="item" open="(" close=")" separator=",">
+                #{item.processInstanceId}
+            </foreach>
+        </if>
+        ORDER BY
+        n.create_time DESC
+    </select>
+    <select id="queryMyApplyProcessOtherFiled" parameterType="Map" resultType="Map">
+        SELECT
+        k.ID_ taskId,
+        k.NAME_ nodeName,
+        n.proc_instance_id processInstanceId
+        FROM
+        act_task_description n
+        LEFT JOIN act_ru_task k ON n.proc_instance_id = k.PROC_INST_ID_
+        AND k.EXECUTION_ID_ IS NOT NULL
+        WHERE
+        <if test="query.instanceIds != null and query.instanceIds.size > 0">
+            n.proc_instance_id in
+            <foreach collection="query.instanceIds" item="item" open="(" close=")" separator=",">
+                #{item.processInstanceId}
+            </foreach>
+        </if>
+        ORDER BY
+        n.create_time DESC
+    </select>
+
+    <select id="getMyApplyProcessCount" parameterType="Map" resultType="Map">
+        select n.proc_instance_id processInstanceId,
+        artk.PROC_DEF_ID_ defId,
+        n.create_time
+        FROM
+        act_task_description n
+        LEFT JOIN act_ru_task artk ON n.proc_instance_id = artk.PROC_INST_ID_
+        WHERE n.status_cd = '0'
+        and n.task_apply_user_id = #{query.userId}
+        <if test="query.procTypeList != null and query.procTypeList.size > 0">
+            and n.process_code in
+            <foreach collection="query.procTypeList" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="query.keyWord != null and query.keyWord != ''">
+            and (n.task_description like concat('%',#{query.keyWord},'%') or n.task_description_supplement like
+            concat('%',#{query.keyWord},'%'))
+        </if>
+        group by
+        n.proc_instance_id,
+        artk.PROC_DEF_ID_,
+        n.create_time
+        ORDER BY
+        n.create_time DESC
+    </select>
+
+    <select id="queryTaskBusinessDetail" parameterType="Map" resultType="Map">
+        SELECT
+        n.`task_desc_id` taskDescId,
+        n.`task_description` taskDescription,
+        n.`task_apply_user_id` taskApplyUserId,
+        n.`business_id` businessId,
+        n.`proc_id` procId,
+        n.`emergency_level` emergencyLevel,
+        n.`PROC_INST_ID_` processInstanceId,
+        n.`status_type` statusType,
+        n.`create_time` createTime,
+        n.`file_address` fileAddress,
+        c.proc_name procName
+        FROM
+        act_task_description n
+        LEFT JOIN act_all_proc c ON n.proc_id = c.proc_id
+        where n.status_cd = '0'
+        <if test="process != null and process.size > 0">
+            and n.PROC_INST_ID_ in
+            <foreach collection="process" item="item" open="(" close=")" separator=",">
+                #{item.processInstanceId}
+            </foreach>
+        </if>
+    </select>
+    <select id="getTypeIdByProcessCode" parameterType="Map" resultType="Map">
+        SELECT mt.type_id  FROM `act_all_proc` ap LEFT JOIN message_type mt ON ap.type=mt.type_class WHERE ap.process_code=#{processCode};
+    </select>
+
+    <update id="updateTaskStatus" parameterType="Map">
+        UPDATE act_ru_variable a SET a.`TEXT_` = #{query.processStatus} WHERE a.`PROC_INST_ID_` = #{query.processInstanceId} and a.NAME_ = #{query.name}
+
+    </update>
+
+    <insert id="saveProcessFormParam" parameterType="Map">
+        insert into act_hi_detail(ID_,TYPE_,PROC_INST_ID_,NAME_,TIME_,TEXT_)
+        values(#{hiDetailId},#{type},#{processInstanceId},#{paramName},#{createDate},#{paramValue})
+    </insert>
+
+    <select id="gettaskHandleUserByTaskName" parameterType="Map" resultType="Map">
+        SELECT
+        j.job_title_id jobTitleId,
+        u.user_id userId,
+        u.`name` userName
+        FROM
+        u_job_title j
+        LEFT JOIN u_user u ON u.job_title_id = j.job_title_id
+        <if test="communityId != null and communityId !=''">
+            LEFT JOIN s_community_user scu ON u.user_id = scu.user_id
+        </if>
+        <if test="orgId != null and orgId !=''">
+            AND u.org_id = #{orgId}
+        </if>
+        WHERE 1=1
+        <if test="taskName != null and taskName !=''">
+            AND j.job_title_name = #{taskName}
+        </if>
+        <if test="communityId != null and communityId !=''">
+            AND scu.community_id = #{communityId}
+        </if>
+
+
+    </select>
+
+    <select id="getProcessFormDetailInfo" parameterType="Map" resultType="Map">
+        SELECT
+            ID_ hiDetailId,
+            TYPE_ type,
+            PROC_INST_ID_ processInstanceId,
+            NAME_ paramName,
+            TIME_ createDate,
+            TEXT_ paramValue
+        FROM
+            act_hi_detail
+        WHERE
+            PROC_INST_ID_ = #{processInstanceId}
+
+    </select>
+
+    <update id="updateProcessFormParam" parameterType="Map">
+        update act_hi_detail set TEXT_ = #{paramValue} where PROC_INST_ID_ = #{processInstanceId} and NAME_ = #{paramName}
+    </update>
+
+    <update id="removeProcessDesc" parameterType="Map">
+        update act_task_description set status_cd = '1' where proc_instance_id = #{query.processInstanceId}
+    </update>
+
+    <select id="getActDescriptionInfo" parameterType="Map" resultType="Map">
+        SELECT
+            act.`task_desc_id` taskDescId,
+            act.`task_description` taskDescription,
+            act.`task_apply_user_name` taskApplyUserName,
+            aap.proc_num procNum
+        FROM
+            act_task_description act
+        left join act_all_proc aap on aap.process_code = act.process_code
+        where act.proc_instance_id = #{processInstanceId} and act.status_cd = '0'
+    </select>
+
+    <delete id="removeProcessFormData" parameterType="Map">
+    delete from act_hi_detail where PROC_INST_ID_ = #{instanceId}
+    </delete>
+
+    <select id="getMyToDoProcessCount" parameterType="Map" resultType="int">
+        select count(1) from (
+        SELECT
+        DISTINCT RES.*
+        FROM
+        ACT_RU_TASK RES
+        LEFT JOIN ACT_RU_IDENTITYLINK I ON I.TASK_ID_ = RES.ID_
+        LEFT JOIN act_task_description atd on RES.PROC_INST_ID_=atd.proc_instance_id and atd.status_cd = '0'
+        WHERE
+        (
+        RES.ASSIGNEE_ = #{query.userId}
+        OR (
+        RES.ASSIGNEE_ IS NULL
+        AND I.TYPE_ = 'candidate'
+        AND (I.USER_ID_ = #{query.userId})
+        )
+        )
+        <if test="query.procTypeList != null and query.procTypeList.size > 0">
+            and atd.process_code in
+            <foreach collection="query.procTypeList" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="query.keyWord != null and query.keyWord != ''">
+            and (atd.task_description like concat('%',#{query.keyWord},'%') or atd.task_description_supplement like
+            concat('%',#{query.keyWord},'%'))
+        </if>
+        )a
+    </select>
+
+    <select id="getTodoTaskDetail" parameterType="Map" resultType="Map">
+        SELECT DISTINCT
+        atd.proc_instance_id processInstanceId,
+        atd.task_description taskDescription,
+        atd.task_description_supplement taskDescriptionSupplement,
+        atd.task_desc_id taskDescId,
+        atd.process_code processCode,
+        atd.create_time createTime,
+        RES.ID_ taskId,
+        RES.OWNER_ owner,
+        RES.DELEGATION_ delegation,
+        RES.SUSPENSION_STATE_ suspensionState,
+        atd.task_apply_user_name userName,
+        c. NAME procName,
+        c. NAME name,
+        c.type procType,
+        c.proc_num procNum,
+        t. NAME procTypeName,
+        arv.TEXT_ statusType,
+        RES.NAME_ nodeName,
+        atd.task_apply_user_name applyUserName,
+        RES.CREATE_TIME_
+        FROM
+        ACT_RU_TASK RES
+        LEFT JOIN ACT_RU_IDENTITYLINK I ON I.TASK_ID_ = RES.ID_
+        LEFT JOIN act_task_description atd on RES.PROC_INST_ID_=atd.proc_instance_id and atd.status_cd = '0'
+        LEFT JOIN act_all_proc c ON atd.process_code = c.process_code
+        LEFT JOIN t_dict t ON c.type = t.status_cd
+        LEFT JOIN act_ru_variable arv on arv.PROC_INST_ID_ = RES.PROC_INST_ID_ AND arv.NAME_ = 'processStatus'
+        WHERE(
+        (
+        RES.ASSIGNEE_ = #{query.userId}
+        OR (
+        RES.ASSIGNEE_ IS NULL
+        AND I.TYPE_ = 'candidate'
+        AND (I.USER_ID_ = #{query.userId})
+        )
+        )
+        )
+        <if test="query.procTypeList != null and query.procTypeList.size > 0">
+            and atd.process_code in
+            <foreach collection="query.procTypeList" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="query.keyWord != null and query.keyWord != ''">
+            and (atd.task_description like concat('%',#{query.keyWord},'%') or atd.task_description_supplement like
+            concat('%',#{query.keyWord},'%'))
+        </if>
+        ORDER BY
+        RES.CREATE_TIME_ DESC
+        <if test="query.page != -1 and query.page != null ">
+            limit #{query.page}, #{query.row}
+        </if>
+    </select>
+
+    <select id="getProcessNumByRoleId" parameterType="Map" resultType="Map">
+        SELECT
+        urp.proc_num procNum,
+        urp.role_id roleId
+        FROM
+        u_role_process urp
+        where 1=1
+        <if test="roleIds != null and roleIds.size > 0">
+            and urp.role_id in
+            <foreach collection="roleIds" item="item" open="(" close=")" separator=",">
+                #{item.roleId}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="getProcessCompletedListCount" parameterType="Map" resultType="Map">
+        SELECT
+        aar.proc_instance_id processInstanceId
+        FROM
+        act_approval_record aar
+        LEFT JOIN act_task_description atd ON aar.proc_instance_id = atd.proc_instance_id
+        LEFT JOIN act_hi_procinst ahp ON ahp.PROC_INST_ID_ = aar.proc_instance_id
+        WHERE
+        (
+        aar.approval_user_id = #{query.userId}
+        OR aar.receiver_id = #{query.userId}
+        )
+        AND ahp.END_ACT_ID_  is not null
+        <if test="query.keyWord != null and query.keyWord != ''">
+            and atd.task_description like concat('%',#{query.keyWord},'%')
+        </if>
+        AND atd.status_cd = '0'
+        GROUP BY
+        aar.proc_instance_id
+
+    </select>
+
+    <select id="queryProcessCompletedDetail" parameterType="Map" resultType="Map">
+        SELECT
+        atd.proc_instance_id processInstanceId,
+        atd.task_description taskDescription,
+        atd.task_description_supplement taskDescriptionSupplement,
+        atd.task_desc_id taskDescId,
+        atd.create_time createTime,
+        u.`nick_name` userName,
+        c. NAME procName,
+        c.type procType,
+        c.proc_num procNum,
+        t. NAME procTypeName
+        FROM
+        act_task_description atd
+        LEFT JOIN sys_user u ON atd.task_apply_user_id = u.user_id
+        LEFT JOIN act_all_proc c ON atd.process_code = c.process_code
+        LEFT JOIN t_dict t ON c.type = t.status_cd
+        WHERE
+        <if test="query.instanceIds != null and query.instanceIds.size > 0">
+            atd.proc_instance_id in
+            <foreach collection="query.instanceIds" item="item" open="(" close=")" separator=",">
+                #{item.processInstanceId}
+            </foreach>
+        </if>
+        ORDER BY
+        atd.create_time DESC
+
+    </select>
+
+    <select id="getProcessMonitorListCount" parameterType="Map" resultType="Map">
+        select proc_instance_id processInstanceId from act_task_description atd where status_cd = '0'
+        <if test="query.employeeId !=null and query.employeeId !=''">
+            and atd.task_apply_user_id = #{query.employeeId}
+        </if>
+        <if test="query.procCode !=null and query.procCode !=''">
+            and atd.process_code = #{query.procCode}
+        </if>
+        <if test="query.procTitle !=null and query.procTitle !=''">
+            and (atd.task_description like concat('%',#{query.procTitle},'%') or atd.task_description_supplement like
+            concat('%',#{query.procTitle},'%'))
+        </if>
+        order by create_time desc
+    </select>
+
+    <select id="getProcessMonitorList" parameterType="Map" resultType="Map">
+        SELECT
+        a.processInstanceId,
+        a.taskDescription,
+        a.taskDescriptionSupplement,
+        a.userName,
+        a.createTime,
+        a.procTypeName,
+        a.nodeName,
+        GROUP_CONCAT(a.untreatedUser) AS untreatedUser,
+        a.procNum,
+        a.processCode
+        FROM
+        (
+        SELECT
+        atd.proc_instance_id processInstanceId,
+        atd.task_description taskDescription,
+        atd.task_description_supplement taskDescriptionSupplement,
+        atd.task_apply_user_name userName,
+        atd.create_time createTime,
+        aap.`name` procTypeName,
+        aht.ACT_NAME_ nodeName,
+        ue.`nick_name` untreatedUser,
+        aap.proc_num procNum,
+        aap.process_code processCode
+        FROM
+        act_task_description atd
+        LEFT JOIN act_all_proc aap ON aap.process_code = atd.process_code
+        LEFT JOIN act_ru_task art ON art.PROC_INST_ID_ = atd.proc_instance_id
+        LEFT JOIN act_hi_identitylink ahi ON ahi.TASK_ID_ = art.ID_
+        LEFT JOIN (
+        SELECT
+        a.PROC_INST_ID_,
+        a.ACT_NAME_
+        FROM
+        act_hi_actinst a,
+        (
+        SELECT
+        MAX(ID_) ID_,
+        PROC_INST_ID_
+        FROM
+        act_hi_actinst
+        WHERE
+        ACT_TYPE_ = 'userTask'
+        OR ACT_TYPE_ = 'endEvent'
+        GROUP BY
+        PROC_INST_ID_
+        ) b
+        WHERE
+        a.ID_ = b.ID_
+        AND a.PROC_INST_ID_ = b.PROC_INST_ID_
+        ) aht ON aht.PROC_INST_ID_ = atd.proc_instance_id
+        LEFT JOIN sys_user ue ON
+        IF (
+        art.ASSIGNEE_ IS NULL,
+        ahi.USER_ID_,
+        art.ASSIGNEE_
+        ) = ue.user_id
+        WHERE 0 = 0
+        <if test="query.instanceIds != null and query.instanceIds.size > 0">
+            and atd.proc_instance_id in
+            <foreach collection="query.instanceIds" item="item" open="(" close=")" separator=",">
+                #{item.processInstanceId}
+            </foreach>
+        </if>
+        <if test="query.employeeId !=null and query.employeeId !=''">
+            and atd.task_apply_user_id = #{query.employeeId}
+        </if>
+        <if test="query.procCode !=null and query.procCode !=''">
+            and atd.process_code = #{query.procCode}
+        </if>
+        <if test="query.procTitle !=null and query.procTitle !=''">
+            and (atd.task_description like concat('%',#{query.procTitle},'%') or atd.task_description_supplement like
+            concat('%',#{query.procTitle},'%'))
+        </if>
+        ) a
+        group by
+        a.processInstanceId,a.taskDescription,a.userName,a.createTime,a.procTypeName,a.nodeName,a.procNum,a.processCode
+        order by a.createTime desc
+        <if test="query.page !=-1 and query.page !=null">
+            limit #{query.page},#{query.row}
+        </if>
+    </select>
+
+    <select id="getProcessRemindRelList" parameterType="Map" resultType="Map">
+        SELECT
+            act_process_remind_rel_id actProcessRemindRelId,
+            process_code processCode,
+            remind_process_code remindProcessCode,
+            remind_date_field remindDateField,
+            proc_num procNum
+        FROM
+            act_process_remind_rel
+        WHERE process_code = #{processCode}
+    </select>
+
+    <insert id="saveRemindProcessRecord" parameterType="Map">
+        INSERT INTO act_due_remind (
+        due_remind_id,
+        proc_instance_id,
+        remind_date,
+        process_code,
+        proc_num,
+        extend_filed,
+        contract_process_proc_num,
+        remind_status,
+        receiver_id
+        )
+        VALUES
+        <foreach collection="processList" item="item" separator=",">
+            (
+            #{item.dueRemindId},
+            #{item.procInstanceId},
+            #{item.remindDate},
+            #{item.processCode},
+            #{item.processNum},
+            #{item.extendFiled},
+            #{item.contractProcessProcNum},
+            #{item.remindStatus},
+            #{item.receiverId}
+            )
+        </foreach>
+    </insert>
+
+    <select id="queryAllNeedToRemindProcess" resultType="Map" parameterType="Map">
+        SELECT
+            adr.due_remind_id dueRemindId,
+            adr.proc_instance_id procInstanceId,
+            adr.remind_date remindDate,
+            adr.proc_num processNum,
+            adr.process_code processCode,
+            adr.extend_filed extendFiled,
+            adr.contract_process_proc_num contractProcessProcNum,
+            adr.remind_status remindStatus
+        FROM
+            act_due_remind adr
+        LEFT JOIN act_task_description atd on adr.proc_instance_id = atd.proc_instance_id
+        where remind_status = '0' and remind_date = #{date} and atd.status_cd = '0'
+    </select>
+
+    <update id="updateProcessRemindStatus" parameterType="Map">
+        update act_due_remind set remind_status = '1' where due_remind_id = #{dueRemindId}
+    </update>
+
+    <insert id="saveProcessApprovalRecord" parameterType="Map">
+        INSERT INTO act_approval_record (
+            act_approval_record_id,
+            task_id,
+            proc_instance_id,
+            approval_user_id,
+            task_definition_key,
+            task_definition_name,
+            task_comment,
+            task_comment_file,
+            approval_sign,
+            receiver_id
+        )
+        VALUES
+            (
+            #{query.actApprovalRecordId},
+            #{query.taskId},
+            #{query.procInstanceId},
+            #{query.approvalUserId},
+            #{query.taskDefinitionKey},
+            #{query.taskDefinitionName},
+            #{query.taskComment},
+            #{query.taskCommentFile},
+            #{query.approvalSign},
+            #{query.receiverId}
+            )
+    </insert>
+
+    <update id="clearProcessApprovalRecord" parameterType="Map">
+        update act_approval_record set del_flag = '1' where proc_instance_id = #{query.instanceId}
+    </update>
+
+    <select id="getProcessApprovalRecord" resultType="Map" parameterType="Map">
+        SELECT
+            act_approval_record_id actApprovalRecordId,
+            proc_instance_id procInstanceId,
+            approval_user_id approvalUserId,
+            task_definition_key taskDefinitionKey,
+            task_definition_name taskDefinitionName,
+            task_id taskId,
+            receiver_id receiverId,
+            approval_sign approvalSign
+        FROM
+            act_approval_record
+        where del_flag = '0' and proc_instance_id = #{query.processInstanceId}
+        order by create_time asc
+    </select>
+
+    <select id="getProcessCurrentTask" parameterType="Map" resultType="Map">
+        SELECT DISTINCT
+          ID_ taskId,
+          NAME_ taskName,
+          TASK_DEF_KEY_ taskDefinitionKey
+        FROM
+            ACT_RU_TASK RES
+        WHERE
+            RES.PROC_INST_ID_ = #{query.processInstanceId}
+        limit 0,1
+    </select>
+    <select id="getAllRunVariableByInstanceId" parameterType="Map" resultType="Map">
+        SELECT
+            TYPE_ type,
+            NAME_ name,
+            TEXT_ text
+        FROM
+            act_ru_variable
+        where PROC_INST_ID_ = #{query.processInstanceId} and TEXT_ is not null
+    </select>
+    <select id="queryAllProcessAboutUser" parameterType="Map" resultType="Map">
+        SELECT
+        atd.proc_instance_id processInstanceId
+        FROM
+        act_task_description atd
+        LEFT JOIN act_approval_record aar ON aar.proc_instance_id = atd.proc_instance_id
+        WHERE
+        atd.status_cd = '0'
+        AND (
+        atd.task_apply_user_id = #{query.userId}
+        OR aar.receiver_id = #{query.userId}
+        )
+        <if test="query.processType != null and query.processType !=''">
+            and atd.process_code = #{query.processType}
+        </if>
+        <if test="query.startTime != null and query.startTime !=''">
+            and atd.create_time >= #{query.startTime}
+            and atd.create_time &lt;= #{query.endTime}
+        </if>
+        GROUP BY
+        atd.proc_instance_id
+        ORDER BY
+        atd.create_time DESC
+    </select>
+    <select id="queryProcessTaskList" parameterType="Map" resultType="Map">
+        SELECT
+        atd.task_description procName,
+        atd.task_description_supplement procNameSupplement,
+        atd.create_time createTime,
+        atd.proc_instance_id processInstanceId,
+        atd.task_apply_user_name applyUserName,
+        atdf.form_value formValue,
+        aap.proc_num procNum
+        FROM
+        act_task_description atd
+        LEFT JOIN act_task_description_form atdf ON atdf.task_desc_id = atd.task_desc_id
+        LEFT JOIN act_all_proc aap ON aap.process_code = atd.process_code
+        WHERE
+        <if test="query.processInstanceIds != null and query.processInstanceIds.size > 0">
+            atd.proc_instance_id in
+            <foreach collection="query.processInstanceIds" item="item" open="(" close=")" separator=",">
+                #{item.processInstanceId}
+            </foreach>
+        </if>
+    </select>
+    <select id="getProcessHistoryTaskInfoList" parameterType="Map" resultType="Map">
+         SELECT DISTINCT
+            RES.ID_ taskId,
+            RES.TASK_DEF_KEY_ taskDefinitionKey,
+            RES.PROC_INST_ID_ processInstanceId,
+            RES.NAME_ taskName,
+            RES.ASSIGNEE_ assignee,
+            RES.START_TIME_ startTime,
+            RES.END_TIME_ endTime,
+            ahc.MESSAGE_ taskComment
+        FROM
+            ACT_HI_TASKINST RES
+        LEFT JOIN act_hi_comment ahc ON RES.ID_ = ahc.TASK_ID_
+        AND ahc.TYPE_ = 'comment'
+        WHERE
+            RES.PROC_INST_ID_ = #{query.processInstanceId}
+        ORDER BY
+            RES.START_TIME_ DESC
+    </select>
+    <select id="queryAllRunTask"  resultType="Map">
+        SELECT
+            art.PROC_INST_ID_ processInstanceId
+        FROM
+            act_ru_task art
+        WHERE art.SUSPENSION_STATE_ = 1
+    </select>
+    <select id="selectActApprovalRecord" parameterType="Map" resultType="com.xiaoyai.common.activiti.api.model.activiti.ActApprovalRecord">
+        SELECT * from act_approval_record where task_id=#{taskId} order by create_time desc  limit 0,1
+    </select>
+
+    <update id="updateProcessDescByOldInstanceId" parameterType="Map">
+        update act_task_description set proc_instance_id = #{query.newProcessInstanceId} where proc_instance_id = #{query.processInstanceId} and status_cd = '0'
+    </update>
+
+    <delete id="deleteProcessHistoryTask" parameterType="Map">
+        delete from act_hi_taskinst where ID_ in
+        <foreach collection="query.taskList" open="(" close=")" separator="," item="item">
+            #{item.taskId}
+        </foreach>
+    </delete>
+
+    <delete id="deleteProcessHisActInstance" parameterType="Map">
+        delete from act_hi_actinst where TASK_ID_ in
+        <foreach collection="query.taskList" open="(" close=")" separator="," item="item">
+            #{item.taskId}
+        </foreach>
+    </delete>
+
+    <delete id="deleteProcessHistoryActinst" parameterType="Map">
+        delete from act_hi_actinst where TASK_ID_ in
+        <foreach collection="taskList" open="(" close=")" separator="," item="item">
+            #{item.taskId}
+        </foreach>
+    </delete>
+
+    <delete id="deleteProcessApprovalRecord" parameterType="Map">
+        delete from act_hi_actinst where TASK_ID_ in
+        <foreach collection="taskList" open="(" close=")" separator="," item="item">
+            #{item.taskId}
+        </foreach>
+    </delete>
+    <delete id="deleteProcessWithdrawTaskComment" parameterType="Map">
+        delete from act_approval_record where task_id = #{query.taskId}
+    </delete>
+    <delete id="deleteProcessApprovalRecordByTaskId" parameterType="Map">
+        delete from act_approval_record where task_id in
+        <foreach collection="query.taskIds" item="item" open="(" close=")" separator=",">
+            #{item.taskId}
+        </foreach>
+    </delete>
+
+    <select id="selectRunTaskInfoByTaskId" parameterType="Map" resultType="Map">
+        select
+          art.ID_,
+          art.`PROC_DEF_ID_`,
+          art.`TASK_DEF_KEY_`,
+          art.`PROC_INST_ID_`,
+          art.`EXECUTION_ID_`,
+          art.`NAME_`,
+          art.`PARENT_TASK_ID_`,
+          art.`DESCRIPTION_`,
+          art.`OWNER_`,
+          art.`ASSIGNEE_`,
+          art.`CREATE_TIME_`,
+          now() END_TIME_,
+          TIMESTAMPDIFF(SECOND,art.`CREATE_TIME_`,now()) DURATION_,
+          art.`PRIORITY_`,
+          art.`DUE_DATE_`,
+          art.`FORM_KEY_`,
+          art.`CATEGORY_`,
+          art.`TENANT_ID_`
+          from act_ru_task art where art.ID_ = #{query.taskId}
+    </select>
+
+    <insert id="insertRecordToHistoryTask" parameterType="Map">
+        insert into act_hi_taskinst(
+          `ID_`,
+          `PROC_DEF_ID_`,
+          `TASK_DEF_KEY_`,
+          `PROC_INST_ID_`,
+          `EXECUTION_ID_`,
+          `NAME_`,
+          `PARENT_TASK_ID_`,
+          `DESCRIPTION_`,
+          `OWNER_`,
+          `ASSIGNEE_`,
+          `START_TIME_`,
+          `END_TIME_`,
+          `DURATION_`,
+          `PRIORITY_`,
+          `DUE_DATE_`,
+          `FORM_KEY_`,
+          `CATEGORY_`,
+          `TENANT_ID_`
+        )values (
+          #{query.ID_},
+          #{query.PROC_DEF_ID_},
+          #{query.TASK_DEF_KEY_},
+          #{query.PROC_INST_ID_},
+          #{query.EXECUTION_ID_},
+          #{query.NAME_},
+          #{query.PARENT_TASK_ID_},
+          #{query.DESCRIPTION_},
+          #{query.OWNER_},
+          #{query.ASSIGNEE_},
+          #{query.CREATE_TIME_},
+          #{query.END_TIME_},
+          #{query.DURATION_},
+          #{query.PRIORITY_},
+          #{query.DUE_DATE_},
+          #{query.FORM_KEY_},
+          #{query.CATEGORY_},
+          #{query.TENANT_ID_}
+          )
+    </insert>
+
+    <insert id="insertRecordToRunTask" parameterType="Map">
+        insert into act_ru_task(ID_,PROC_INST_ID_,NAME_,TASK_DEF_KEY_,ASSIGNEE_,DELEGATION_,PRIORITY_,CREATE_TIME_,SUSPENSION_STATE_)values (#{query.id},#{query.processInstanceId},#{query.name},#{query.taskDefinitionKey},#{query.assignee},#{query.delegation},#{query.priority},#{query.createTime},2)
+    </insert>
+
+    <delete id="deleteRunTaskByTaskId" parameterType="Map">
+        delete from act_ru_task where ID_ = #{query.taskId}
+    </delete>
+
+    <select id="getProcessApprovalRecordByTaskId" parameterType="Map" resultType="Map">
+        select
+          act_approval_record_id actApprovalRecordId,
+          task_id taskId,
+          proc_instance_id procInstanceId,
+          approval_user_id approvalUserId,
+          task_definition_key taskDefinitionKey,
+          task_definition_name taskDefinitionName,
+          task_comment taskComment,
+          receiver_id receiverId,
+          approval_sign approvalSign,
+          create_time createTime
+          from act_approval_record where task_id = #{query.taskId}
+    </select>
+
+    <select id="queryAllApprovalComment" resultType="Map" parameterType="Map">
+        SELECT
+            aar.act_approval_record_id actApprovalRecordId,
+            aar.task_id taskId,
+            aar.proc_instance_id procInstanceId,
+            aar.approval_user_id approvalUserId,
+            aar.task_definition_key taskDefinitionKey,
+            aar.task_definition_name taskDefinitionName,
+            aar.task_comment taskComment,
+            aar.task_comment_file taskCommentFile,
+            aar.receiver_id receiverId,
+            aar.approval_sign approvalSign,
+            aar.create_time createTime,
+            aar.del_flag delFlag,
+            ue.nick_name approvalUserName,
+            uee.nick_name receiverName
+        FROM
+            act_approval_record aar
+        LEFT JOIN sys_user ue on aar.approval_user_id = ue.user_id
+        LEFT JOIN sys_user uee on aar.receiver_id = uee.user_id
+        where aar.proc_instance_id = #{query.processInstanceId} and aar.task_comment != '人工转发'
+        order by aar.create_time asc
+    </select>
+
+    <insert id="insertRecordToRunExecut" parameterType="Map">
+        insert into act_ru_execution (ID_,REV_,PROC_INST_ID_)values (#{query.processInstanceId},'1',#{query.processInstanceId})
+    </insert>
+
+    <select id="getRunExecutionRecord" resultType="int" parameterType="Map">
+        SELECT COUNT(1) FROM (SELECT DISTINCT RES.*
+        FROM
+            ACT_RU_EXECUTION RES
+        WHERE
+            RES.PROC_INST_ID_ = #{query.processInstanceId}
+            ) a
+    </select>
+
+    <update id="updateProcessApprovalRecord" parameterType="Map">
+        update act_approval_record set receiver_id = #{query.receiverId} where act_approval_record_id = #{query.actApprovalRecordId}
+    </update>
+
+    <insert id="insertProcessTransferRecordToHisTask" parameterType="Map">
+        insert into act_hi_taskinst(ID_,TASK_DEF_KEY_,PROC_INST_ID_,NAME_,ASSIGNEE_,START_TIME_,END_TIME_,PRIORITY_)
+        values (#{query.id},#{query.taskDefinitionKey},#{query.processInstanceId},#{query.name},#{query.assignee},#{query.createTime},#{query.endTime},50)
+    </insert>
+
+    <select id="getProcessOperationAuthorityByTaskId" parameterType="Map" resultType="Map">
+        select
+          IF (DELEGATION_ is null,"",DELEGATION_) delegation,
+          IF (SUSPENSION_STATE_ is null,"",SUSPENSION_STATE_) suspensionState
+        from act_ru_task
+        where ID_ = #{query.taskId}
+    </select>
+
+    <select id="getProcessEffectiveCommentList" resultType="Map" parameterType="Map">
+        SELECT
+            aar.act_approval_record_id actApprovalRecordId,
+            aar.task_id taskId,
+            aar.proc_instance_id procInstanceId,
+            aar.approval_user_id approvalUserId,
+            aar.task_definition_key taskDefinitionKey,
+            aar.task_definition_name taskDefinitionName,
+            aar.task_comment taskComment,
+            aar.receiver_id receiverId,
+            aar.approval_sign approvalSign,
+            aar.create_time createTime,
+            aar.del_flag delFlag
+        FROM
+            act_approval_record aar
+        where aar.proc_instance_id = #{query.processInstanceId} and aar.del_flag = '0'
+        order by aar.create_time desc
+    </select>
+
+    <delete id="deleteProcessByProcessInstanceId" parameterType="Map">
+        delete from act_ru_task where PROC_INST_ID_ = #{processInstanceId} and SUSPENSION_STATE_ = '2'
+    </delete>
+
+    <select id="getProcessToDoListByProcessInstanceId" parameterType="Map" resultType="Map">
+        select ID_ from act_ru_task where PROC_INST_ID_ = #{query.processInstanceId} and ASSIGNEE_ = #{query.forwardEmployeeId}
+    </select>
+
+    <delete id="deleteProcessForwardRecord" parameterType="Map">
+        delete from act_ru_task where PROC_INST_ID_ = #{query.processInstanceId} and ASSIGNEE_ = #{query.employeeId} and DELEGATION_ = 'FORWARD'
+    </delete>
+
+    <select id="getActPermissionList" parameterType="Map" resultType="Map">
+        SELECT
+        afp.form_id formId,
+        afp.detail_id detailId,
+        afp.proc_key procKkey,
+        afp.read_only readOnly,
+        afp.taskdef_key taskdefKey,
+        afp.view_permission viewPermission
+        FROM
+        act_form_permission afp
+        WHERE 1=1
+        <if test="query.processCode != null and query.processCode !=''">
+            and afp.form_id = #{query.processCode}
+        </if>
+    </select>
+
+    <select id="getCurrentTaskAssigneeList" parameterType="Map" resultType="Map">
+        select ID_,ASSIGNEE_ from act_ru_task where PROC_INST_ID_ = #{query.processInstanceId} and ASSIGNEE_ = #{query.employeeId} and SUSPENSION_STATE_ = 1
+    </select>
+
+    <select id="sureCurTaskIsRunning" parameterType="Map" resultType="Map">
+        select * from act_ru_task where ID_ = #{query.taskId}
+    </select>
+
+    <select id="hasProcessApprovalRecord" parameterType="Map" resultType="Map">
+        select act_approval_record_id from act_approval_record where proc_instance_id = #{instanceId}
+        and approval_user_id = #{employeeId} and task_definition_name != "发起人"
+    </select>
+    <select id="queryActProcessDtoByProcessCode" parameterType="Map" resultType="Map">
+        SELECT
+        aap.proc_id procId,
+        aap.proc_num procNum,
+        aap.name,
+        aap.icon_url iconUrl,
+        aap.url,
+        aap.process_code processCode,
+        aap.create_time createTime,
+        aap.status_cd statusCd,
+        aap.type,
+        aap.show_flag showFlag
+        FROM
+        act_all_proc aap
+        LEFT JOIN t_dict td on aap.type = td.status_cd
+        WHERE aap.status_cd = '0' and aap.process_code = #{processCode}
+    </select>
+
+    <select id="getApplyProcessByEmployeeId" parameterType="Map" resultType="Map">
+        select atd.proc_instance_id procInstanceId, art.NAME_ nodeName from act_task_description atd
+        left join act_all_proc aap on aap.process_code = atd.process_code
+        left join act_ru_task art on atd.proc_instance_id = art.PROC_INST_ID_ and SUSPENSION_STATE_ = 1
+        where atd.task_apply_user_id = #{applyUserId} and atd.status_cd = '0'
+        <if test="processNumber != null and processNumber.size > 0">
+            and aap.proc_num in
+            <foreach collection="processNumber" open="(" close=")" separator="," item="item">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <insert id="saveHistoryTaskInfoBatch" parameterType="Map">
+        insert into act_hi_taskinst(
+        `ID_`,
+        `PROC_DEF_ID_`,
+        `TASK_DEF_KEY_`,
+        `PROC_INST_ID_`,
+        `EXECUTION_ID_`,
+        `NAME_`,
+        `PARENT_TASK_ID_`,
+        `DESCRIPTION_`,
+        `OWNER_`,
+        `ASSIGNEE_`,
+        `START_TIME_`,
+        `END_TIME_`,
+        `DURATION_`,
+        `PRIORITY_`,
+        `DUE_DATE_`,
+        `FORM_KEY_`,
+        `CATEGORY_`,
+        `TENANT_ID_`
+        )values
+        <foreach collection="historyTaskList" item="task" separator=",">
+            (
+            #{task.id},
+            #{task.procDefId},
+            #{task.taskDefKey},
+            #{task.procInstId},
+            #{task.executionId},
+            #{task.name},
+            #{task.parentTaskId},
+            #{task.description},
+            #{task.owner},
+            #{task.assignee},
+            #{task.createTime},
+            #{task.endTime},
+            #{task.duration},
+            #{task.priority},
+            #{task.dueDate},
+            #{task.formKey},
+            #{task.category},
+            #{task.tenantId}
+            )
+        </foreach>
+    </insert>
+
+    <insert id="saveActApprovalRecordDtoListBatch" parameterType="Map">
+        INSERT INTO act_approval_record (
+            act_approval_record_id,
+            task_id,
+            proc_instance_id,
+            approval_user_id,
+            task_definition_key,
+            task_definition_name,
+            task_comment,
+            task_comment_file,
+            approval_sign,
+            receiver_id,
+            status_cd
+        )
+        VALUES
+        <foreach collection="recordList" item="record" separator=",">
+            (
+            #{record.actApprovalRecordId},
+            #{record.taskId},
+            #{record.procInstanceId},
+            #{record.approvalUserId},
+            #{record.taskDefinitionKey},
+            #{record.taskDefinitionName},
+            #{record.taskComment},
+            #{record.taskCommentFile},
+            #{record.approvalSign},
+            #{record.receiverId},
+            #{record.statusCd}
+            )
+        </foreach>
+    </insert>
+
+    <select id="getEntryStaffInformationByInstanceId" resultType="Map" parameterType="Map">
+        SELECT
+            atdf.form_value formValue
+        FROM
+            act_task_description atd
+        LEFT JOIN act_task_description_form atdf ON atdf.task_desc_id = atd.task_desc_id
+        where atd.proc_instance_id = #{instanceId} and atd.status_cd = '0'
+    </select>
+
+    <select id="getRoleInfoByJobName" parameterType="Map" resultType="Map">
+        SELECT
+            ppr.pg_id pgId
+        FROM
+            u_job uj
+        LEFT JOIN job_role_rel jrr ON uj.job_id = jrr.job_id
+        LEFT JOIN p_privilege_role ppr ON jrr.role_id = ppr.role_id
+        WHERE
+            uj.job_name = #{entryPosition}
+        AND uj.status_cd = '0'
+        AND jrr.status_cd = '0'
+        AND ppr.status_cd = '0'
+    </select>
+
+    <insert id="saveUserPrivilegeRel" parameterType="Map">
+        insert into p_privilege_user(
+            p_id,
+            privilege_flag,
+            user_id
+        )values
+        <foreach collection="privilegeList" item="privilege" separator=",">
+            (
+            #{privilege.pId},
+            #{privilege.privilegeFlag},
+            #{privilege.userId}
+            )
+        </foreach>
+    </insert>
+
+    <select id="getRoleIdsByJobName" parameterType="Map" resultType="Map">
+        SELECT
+            jrr.role_id roleId
+        FROM
+            u_job uj
+        LEFT JOIN job_role_rel jrr ON uj.job_id = jrr.job_id
+        WHERE
+            uj.job_name = #{entryPosition}
+        AND uj.status_cd = '0'
+        AND jrr.status_cd = '0'
+    </select>
+
+    <select id="getUserIdByEmployeeId" parameterType="Map" resultType="Map">
+        select user_id userId from  u_user where employee_id = #{employeeId} and status_cd = '0'
+    </select>
+
+    <select id="queryProcessOvertimeHandleRemindList" resultType="Map">
+        SELECT
+            PROC_INST_ID_ instanceId,
+            ASSIGNEE_ assignee,
+            CREATE_TIME_ createTime
+        FROM
+            act_ru_task
+        WHERE
+            SUSPENSION_STATE_ = '1'
+        AND ASSIGNEE_ IS NOT NULL
+        AND ASSIGNEE_ != ""
+    </select>
+
+    <select id="queryProcessOvertimeHRemindedList" resultType="Map">
+        select process_instance_id instanceId from act_overtime_handle_remind
+    </select>
+
+    <insert id="saveProcessOvertimeHandleRemindRecord" parameterType="Map">
+        insert into act_overtime_handle_remind
+        (
+        remind_id,
+        process_instance_id,
+        status_cd,
+        create_time
+        ) values
+        <foreach collection="remindList" item="item" separator=",">
+            (
+            #{item.remindId},#{item.processInstanceId},#{item.statusCd},#{item.createTime}
+            )
+        </foreach>
+    </insert>
+
+    <select id="getProcInfoByInstanceId" resultType="Map" parameterType="Map">
+        SELECT
+            aap.proc_num procNum
+        FROM
+            act_task_description atd
+        LEFT JOIN act_all_proc aap ON atd.process_code = aap.process_code
+        WHERE
+            atd.proc_instance_id = #{query.instanceId}
+    </select>
+
+    <update id="updateProcessRemindReceiverId" parameterType="Map">
+        update act_due_remind set receiver_id = #{handoverUser} where receiver_id = #{leverUserId} and remind_status = '0'
+    </update>
+
+    <select id="getMessageTypeByMap" resultType="Map" parameterType="Map">
+        SELECT r.rel_id relId,r.employee_id employeeId,r.type_id typeId,u.open_id openId,u.app_cid appCid FROM
+        `message_employee_rel` r
+        LEFT JOIN u_user u ON r.employee_id=u.employee_id
+        WHERE 1=1
+        <if test="employeeIds != null and employeeIds.size > 0">
+            and u.employee_id in
+            <foreach collection="employeeIds" open="(" close=")" separator="," item="item">
+                #{item}
+      </foreach>
+    </if>
+  </select>
+
+  <select id="getMessageTypeByEmployee" resultType="map">
+        SELECT
+          t.type_id typeId
+        FROM
+          `message_type` t
+        LEFT JOIN message_employee_rel r ON t.type_parent_id = r.type_id
+        WHERE
+          r.employee_id =#{employeeId};
+    </select>
+
+    <select id="getProcessListByRoleIds" resultType="Map">
+        SELECT
+        distinct
+        aap.proc_id procId,
+        aap.proc_num procNum,
+        aap.name procName,
+        aap.icon_url iconUrl,
+        aap.url,
+        aap.process_code procCode,
+        td.name procTypeName,
+        aap.create_time createTime,
+        aap.status_cd statusCd,
+        aap.type,
+        aap.context
+        FROM
+        act_all_proc aap
+        LEFT JOIN t_dict td on aap.type = td.status_cd
+        LEFT JOIN act_role_process arp on arp.process_code = aap.process_code
+        WHERE aap.status_cd = '0'
+        and show_flag = "0"
+        <if test="roleIds != null and roleIds.size > 0">
+            and arp.role_id in
+            <foreach collection="roleIds" item="roleId" open="(" close=")" separator=",">
+                #{roleId}
+            </foreach>
+        </if>
+        order by aap.name
+    </select>
+    <select id="getProcessDetailInfo" parameterType="Map" resultType="Map">
+        SELECT
+            atd.task_desc_id taskDescId,
+            atd.proc_instance_id procInstanceId,
+            atdf.form_value formValue,
+            atd.task_description taskDescription,
+            atd.task_apply_user_id taskApplyUserId,
+            atd.task_apply_user_name userName
+        FROM
+            act_task_description atd
+        LEFT JOIN act_task_description_form atdf ON atdf.task_desc_id = atd.task_desc_id
+        where atd.proc_instance_id = #{query.processInstanceId} and atd.status_cd = '0'
+    </select>
+    <select id="queryProcessCandidateOrParticipant" parameterType="Map" resultType="Map">
+        SELECT
+            *
+        FROM
+            (
+                SELECT
+                    aht.NAME_ nodeName,
+                    aht.START_TIME_ startTime,
+                    aht.ASSIGNEE_ employeeId,
+                    aht.END_TIME_ endTime,
+                    aht.DURATION_ dunration,
+                    aht.ID_ taskId,
+                    ue.`nick_name` employeeName,
+                    ahc.MESSAGE_ processComment
+                FROM
+                    act_hi_taskinst aht
+                LEFT JOIN act_hi_comment ahc ON aht.ID_ = ahc.TASK_ID_ and ahc.TYPE_ = 'comment'
+                LEFT JOIN sys_user ue ON aht.ASSIGNEE_ = ue.user_id
+                WHERE
+                    aht.PROC_INST_ID_ = #{query.processInstanceId}
+                AND aht.ASSIGNEE_ IS NOT NULL
+                and (ahc.MESSAGE_ != '审批撤回' or ahc.MESSAGE_ is null)
+                UNION
+                    SELECT
+                        aht.NAME_ nodeName,
+                        aht.START_TIME_ startTime,
+                        ahi.USER_ID_ employeeId,
+                        aht.END_TIME_ endTime,
+                        aht.DURATION_ dunration,
+                        aht.ID_ taskId,
+                        ue.`nick_name` employeeName,
+                        ahc.MESSAGE_ processComment
+                    FROM
+                        act_hi_taskinst aht
+                    LEFT JOIN act_hi_comment ahc ON aht.ID_ = ahc.TASK_ID_ and ahc.TYPE_ = 'comment'
+                    LEFT JOIN act_hi_identitylink ahi ON ahi.TASK_ID_ = aht.ID_
+                    LEFT JOIN sys_user ue ON ahi.USER_ID_ = ue.user_id
+                    WHERE
+                        aht.PROC_INST_ID_ = #{query.processInstanceId}
+                    AND aht.ASSIGNEE_ IS NULL
+                    and (ahc.MESSAGE_ != '审批撤回' or ahc.MESSAGE_ is null)
+            ) a
+        ORDER BY
+            a.startTime ASC
+    </select>
+    <select id="getAllEditFormByTaskDefinitionKey" parameterType="Map" resultType="Map">
+        SELECT
+        afp.form_id formId,
+        afp.detail_id detailId,
+        afp.proc_key procKkey,
+        afp.read_only readOnly,
+        afp.taskdef_key taskdefKey,
+        afp.view_permission viewPermission
+        FROM
+        act_form_permission afp
+        WHERE 1=1
+        <if test="query.taskDefinitionKey != null and query.taskDefinitionKey !=''">
+            and afp.taskdef_key = #{query.taskDefinitionKey}
+        </if>
+        <if test="query.formId != null and query.formId !=''">
+            and afp.form_id = #{query.formId}
+        </if>
+    </select>
+
+    <update id="updateProcessDesc" parameterType="Map">
+        update act_task_description_form set form_value = #{query.formValue} WHERE task_desc_id = (SELECT task_desc_id FROM act_task_description WHERE proc_instance_id = #{query.processInstanceId})
+    </update>
+
+    <select id="queryProcessDescByInstanceId" parameterType="Map" resultType="Map">
+        SELECT
+		atd.`task_desc_id` taskDescId,
+		atd.`task_description` taskDescription,
+		atd.`task_apply_user_id` taskApplyUserId,
+		atd.`task_apply_user_name` taskApplyUserName,
+		atd.`process_code` processCode,
+		atdf.`form_value` formValue,
+		atd.`proc_instance_id`,
+		atd.`status_cd`,
+		atd.`create_time`,
+		atd.`community_id`,
+		atd.task_description_supplement taskDescriptionSupplement,
+		aap.`proc_num` procNum
+        FROM
+            act_task_description atd
+        LEFT JOIN act_task_description_form atdf ON atdf.task_desc_id = atd.task_desc_id
+        LEFT JOIN act_all_proc aap ON aap.process_code = atd.process_code
+        WHERE atd.proc_instance_id =#{instanceId} and atd.status_cd = '0'
+
+    </select>
+    <select id="queryRunTaskByInstanceId" parameterType="Map" resultType="Map">
+        SELECT
+            ID_,
+            REV_,
+            EXECUTION_ID_,
+            PROC_INST_ID_,
+            NAME_,
+            ASSIGNEE_,
+            DELEGATION_
+        FROM
+            act_ru_task
+        where 1=1
+        <if test="query.instanceId !=null and query.instanceId !=''">
+            and PROC_INST_ID_ = #{query.instanceId}
+        </if>
+        <if test="query.delegation !=null and query.delegation !=''">
+            and DELEGATION_ = #{query.delegation}
+        </if>
+    </select>
+</mapper>

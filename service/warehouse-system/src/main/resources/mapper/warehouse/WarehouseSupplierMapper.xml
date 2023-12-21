@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaoyai.warehouse.mapper.WarehouseSupplierMapper">
+    
+    <resultMap type="WarehouseSupplier" id="WarehouseSupplierResult">
+        <result property="supplierId"    column="supplier_id"    />
+        <result property="supplierName"    column="supplier_name"    />
+        <result property="address"    column="address"    />
+        <result property="contacts"    column="contacts"    />
+        <result property="contactsPhone"    column="contacts_phone"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectWarehouseSupplierVo">
+        select supplier_id, supplier_name, address, contacts, contacts_phone, del_flag, create_by, create_time, update_by, update_time, remark from warehouse_supplier
+    </sql>
+
+    <select id="selectWarehouseSupplierList" parameterType="WarehouseSupplier" resultMap="WarehouseSupplierResult">
+        <include refid="selectWarehouseSupplierVo"/>
+        <where>
+            and del_flag = 0
+            <if test="supplierName != null  and supplierName != ''"> and supplier_name like concat('%', #{supplierName}, '%')</if>
+            <if test="address != null  and address != ''"> and address = #{address}</if>
+            <if test="contacts != null  and contacts != ''"> and contacts = #{contacts}</if>
+            <if test="contactsPhone != null  and contactsPhone != ''"> and contacts_phone = #{contactsPhone}</if>
+        </where>
+    </select>
+    
+    <select id="selectWarehouseSupplierBySupplierId" parameterType="Long" resultMap="WarehouseSupplierResult">
+        <include refid="selectWarehouseSupplierVo"/>
+        where del_flag =0 and supplier_id = #{supplierId}
+    </select>
+        
+    <insert id="insertWarehouseSupplier" parameterType="WarehouseSupplier" useGeneratedKeys="true" keyProperty="supplierId">
+        insert into warehouse_supplier
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="supplierName != null">supplier_name,</if>
+            <if test="address != null">address,</if>
+            <if test="contacts != null">contacts,</if>
+            <if test="contactsPhone != null">contacts_phone,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="supplierName != null">#{supplierName},</if>
+            <if test="address != null">#{address},</if>
+            <if test="contacts != null">#{contacts},</if>
+            <if test="contactsPhone != null">#{contactsPhone},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateWarehouseSupplier" parameterType="WarehouseSupplier">
+        update warehouse_supplier
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="supplierName != null">supplier_name = #{supplierName},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="contacts != null">contacts = #{contacts},</if>
+            <if test="contactsPhone != null">contacts_phone = #{contactsPhone},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where supplier_id = #{supplierId}
+    </update>
+
+    <update id="deleteWarehouseSupplierBySupplierId" parameterType="Long">
+        update  warehouse_supplier set del_flag = 1 where supplier_id = #{supplierId}
+    </update>
+
+    <update id="deleteWarehouseSupplierBySupplierIds" parameterType="String">
+        update  warehouse_supplier set del_flag = 1 where supplier_id in
+        <foreach item="supplierId" collection="array" open="(" separator="," close=")">
+            #{supplierId}
+        </foreach>
+    </update>
+</mapper>

@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaoyai.warehouse.mapper.WarehouseGoodsMapper">
+
+    <resultMap type="WarehouseGoods" id="WarehouseGoodsResult">
+        <result property="goodsId" column="goods_id"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="categoryName" column="category_name"/>
+        <result property="categoryCode" column="category_code"/>
+        <result property="goodsCode" column="goods_code"/>
+        <result property="goodsName" column="goods_name"/>
+        <result property="area" column="area"/>
+        <result property="specificationType" column="specification_type"/>
+        <result property="unitType" column="unit_type"/>
+        <result property="colorType" column="color_type"/>
+        <result property="minStock" column="min_stock"/>
+        <result property="maxStock" column="max_stock"/>
+        <result property="goodsPicture" column="goods_picture"/>
+        <result property="expirationDateType" column="expiration_date_type"/>
+        <result property="expirationDate" column="expiration_date"/>
+        <result property="warrantyDateType" column="warranty_date_type"/>
+        <result property="warrantyDate" column="warranty_date"/>
+        <result property="snValidate" column="sn_validate"/>
+        <result property="delFlag" column="del_flag"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+
+    <sql id="selectWarehouseGoodsVo">
+        select a.goods_id,
+               a.category_id,
+               a.category_code,
+               a.goods_code,
+               a.goods_name,
+               a.area,
+               a.specification_type,
+               a.unit_type,
+               a.color_type,
+               a.min_stock,
+               a.max_stock,
+               a.goods_picture,
+               a.expiration_date_type,
+               a.expiration_date,
+               a.warranty_date_type,
+               a.warranty_date,
+               a.del_flag,
+               a.create_by,
+               a.create_time,
+               a.update_by,
+               a.update_time,
+               a.remark,
+               a.sn_validate,
+               b.category_name
+        from warehouse_goods a
+                 left join warehouse_goods_category b on a.category_id = b.category_id
+    </sql>
+
+    <select id="selectWarehouseGoodsList" parameterType="WarehouseGoodsQueryDto" resultMap="WarehouseGoodsResult">
+        <include refid="selectWarehouseGoodsVo"/>
+        <where>
+            and a.del_flag = 0
+            <if test="goodsCode != null  and goodsCode != ''">and a.goods_code = #{goodsCode}</if>
+            <if test="snValidate != null  and snValidate != ''">and a.sn_validate = #{snValidate}</if>
+            <if test="categoryIds != null  and categoryIds.size()>0">
+                and a.category_id in
+                <foreach collection="categoryIds" item="name" index="index" open="(" close=")" separator=",">
+                    #{name}
+                </foreach>
+            </if>
+            <if test="categoryId != null  and categoryId != ''">and a.category_id = #{categoryId}</if>
+            <if test="goodsName != null  and goodsName != ''">and a.goods_name like concat('%', #{goodsName}, '%')</if>
+        </where>
+    </select>
+
+    <select id="selectWarehouseGoodsByGoodsId" parameterType="Long" resultMap="WarehouseGoodsResult">
+        <include refid="selectWarehouseGoodsVo"/>
+        where a.del_flag =0 and a.goods_id = #{goodsId}
+    </select>
+
+    <insert id="insertWarehouseGoods" parameterType="WarehouseGoods" useGeneratedKeys="true" keyProperty="goodsId">
+        insert into warehouse_goods
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="categoryId != null">category_id,</if>
+            <if test="categoryCode != null">category_code,</if>
+            <if test="goodsCode != null">goods_code,</if>
+            <if test="goodsName != null">goods_name,</if>
+            <if test="area != null">area,</if>
+            <if test="specificationType != null">specification_type,</if>
+            <if test="unitType != null">unit_type,</if>
+            <if test="colorType != null">color_type,</if>
+            <if test="minStock != null">min_stock,</if>
+            <if test="maxStock != null">max_stock,</if>
+            <if test="goodsPicture != null">goods_picture,</if>
+            <if test="expirationDateType != null">expiration_date_type,</if>
+            <if test="expirationDate != null">expiration_date,</if>
+            <if test="warrantyDateType != null">warranty_date_type,</if>
+            <if test="warrantyDate != null">warranty_date,</if>
+            <if test="snValidate != null">sn_validate,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="categoryId != null">#{categoryId},</if>
+            <if test="categoryCode != null">#{categoryCode},</if>
+            <if test="goodsCode != null">#{goodsCode},</if>
+            <if test="goodsName != null">#{goodsName},</if>
+            <if test="area != null">#{area},</if>
+            <if test="specificationType != null">#{specificationType},</if>
+            <if test="unitType != null">#{unitType},</if>
+            <if test="colorType != null">#{colorType},</if>
+            <if test="minStock != null">#{minStock},</if>
+            <if test="maxStock != null">#{maxStock},</if>
+            <if test="goodsPicture != null">#{goodsPicture},</if>
+            <if test="expirationDateType != null">#{expirationDateType},</if>
+            <if test="expirationDate != null">#{expirationDate},</if>
+            <if test="warrantyDateType != null">#{warrantyDateType},</if>
+            <if test="warrantyDate != null">#{warrantyDate},</if>
+            <if test="snValidate != null">#{snValidate},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+        </trim>
+    </insert>
+
+    <update id="updateWarehouseGoods" parameterType="WarehouseGoods">
+        update warehouse_goods
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="categoryCode != null">category_code = #{categoryCode},</if>
+            <if test="goodsCode != null">goods_code = #{goodsCode},</if>
+            <if test="goodsName != null">goods_name = #{goodsName},</if>
+            <if test="area != null">area = #{area},</if>
+            <if test="specificationType != null">specification_type = #{specificationType},</if>
+            <if test="unitType != null">unit_type = #{unitType},</if>
+            <if test="colorType != null">color_type = #{colorType},</if>
+            <if test="minStock != null">min_stock = #{minStock},</if>
+            <if test="maxStock != null">max_stock = #{maxStock},</if>
+            <if test="goodsPicture != null">goods_picture = #{goodsPicture},</if>
+            <if test="expirationDateType != null">expiration_date_type = #{expirationDateType},</if>
+            <if test="expirationDate != null">expiration_date = #{expirationDate},</if>
+            <if test="warrantyDateType != null">warranty_date_type = #{warrantyDateType},</if>
+            <if test="warrantyDate != null">warranty_date = #{warrantyDate},</if>
+            <if test="snValidate != null">sn_validate = #{snValidate},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where goods_id = #{goodsId}
+    </update>
+
+    <update id="deleteWarehouseGoodsByGoodsId" parameterType="Long">
+        update warehouse_goods
+        set del_flag = 1
+        where goods_id = #{goodsId}
+    </update>
+
+    <update id="deleteWarehouseGoodsByGoodsIds" parameterType="String">
+        update warehouse_goods set del_flag = 1 where goods_id in
+        <foreach item="goodsId" collection="array" open="(" separator="," close=")">
+            #{goodsId}
+        </foreach>
+    </update>
+    <select id="selectStockGoodsList" parameterType="WarehouseStockGoodsDto" resultType="WarehouseStockGoodsDto">
+        SELECT
+        a.`goods_id`,
+        a.`category_id`,
+        a.`category_code`,
+        a.`goods_code`,
+        a.`goods_name`,
+        a.`area`,
+        a.`specification_type`,
+        a.`unit_type`,
+        a.`color_type`,
+        a.`min_stock`,
+        a.`max_stock`,
+        a.`goods_picture`,
+        a.`expiration_date`,
+        a.`expiration_date_type`,
+        a.`warranty_date`,
+        a.`warranty_date_type`,
+        a.`sn_validate`,
+        c.category_name,
+        IF (b.stock_number IS NULL, 0,b.stock_number) stock_number,
+        b.goods_price,
+        b.goods_deadline_time
+        FROM
+        warehouse_goods a
+        LEFT JOIN warehouse_stock b ON a.goods_id = b.goods_id
+        <if test="warehouseId != null  and warehouseId != ''">
+            and b.warehouse_id = #{warehouseId}
+        </if>
+        LEFT JOIN warehouse_goods_category c on c.category_id = a.category_id
+        where a.del_flag = 0
+        <if test="goodsId != null  and goodsId != ''">and a.goods_id = #{goodsId}</if>
+        <if test="goodsCode != null  and goodsCode != ''">and a.goods_code = #{goodsCode}</if>
+        <if test="snValidate != null  and snValidate != ''">and a.sn_validate = #{snValidate}</if>
+        <if test="categoryId != null  and categoryId != ''">and a.category_id = #{categoryId}</if>
+        <if test="goodsName != null  and goodsName != ''">and a.goods_name like concat('%', #{goodsName}, '%')</if>
+    </select>
+
+</mapper>

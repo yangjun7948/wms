@@ -1,0 +1,122 @@
+.ibox-title {
+  -moz-border-bottom-colors: none;
+  -moz-border-left-colors: none;
+  -moz-border-right-colors: none;
+  -moz-border-top-colors: none;
+  background-color: #ffffff;
+  border-color: #e7eaec;
+  border-image: none;
+  border-style: solid solid none;
+  border-width: 2px 0 0;
+  color: inherit;
+  margin-bottom: 0;
+  padding: 15px 90px 8px 15px;
+  min-height: 48px;
+  position: relative;
+  clear: both;
+}
+.ibox-content {
+  background-color: #ffffff;
+  color: inherit;
+  padding: 15px 20px 20px 20px;
+  border-color: #e7eaec;
+  border-image: none;
+  border-style: solid solid none;
+  border-width: 1px 0;
+}
+
+.proc-common-value {
+  text-align: left;
+}
+.notice-fixed {
+  position: fixed !important;
+  top: 130px !important;
+  right: 330px !important;
+  z-index: 100;
+}
+.notice-sidebar {
+  display: flex;
+}
+.procwy-btn {
+  position: absolute;
+  top: 6px;
+  right: 50px;
+}
+.process-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background:#e7f3fc;
+  height: 32px;
+  line-height: 32px;
+  margin: 10px 20px;
+}
+.process-item-title {
+  font-weight: bold;
+  text-align: left;
+  padding: 0px 0px 0px 65px;
+}
+
+
+/**
+  流程按钮控制
+ */
+.scrollContent {
+  height: calc(100% - 55px);
+}
+.selfTab {
+  height: 100%;
+}
+.selfTab > .el-tabs__content {
+  height: calc(100% - 39px);
+}
+.selfTab-no-border {
+  height: 100%;
+}
+.selfTab-no-border > .el-tabs__content {
+  height: calc(100% - 55px);
+}
+
+@-webkit-keyframes showLeftContainer {
+  from {
+    width: 0
+  }
+
+  to {
+    width: 23%;
+  }
+}
+
+@-webkit-keyframes hideLeftContainer {
+  from {
+    width: 23%
+  }
+
+  to {
+    width: 0
+  }
+}
+
+@-webkit-keyframes cosRightContainer {
+  from {
+    width: 100%
+  }
+
+  to {
+    width: 75%;
+  }
+}
+
+@-webkit-keyframes expRightContainer {
+  from {
+    width: 75%
+  }
+
+  to {
+    width: 100%;
+  }
+}
+.process-container-split:hover{
+    box-shadow: inset 0px 0px 8px 0px;
+    border-radius: 5px
+}
