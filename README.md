@@ -11,7 +11,7 @@
 
 ##### WEB端体验
 
-演示地址: <https://wms.xiaoy-ai.com>
+演示地址: <https://wms.xiaoy-ai.com> （已停用，请自行本地运行）
 
 体验账号: test
 
